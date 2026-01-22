@@ -4,6 +4,22 @@
 
 @section('content')
 <div class="container-fluid">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-light p-2 rounded">
+            <li class="breadcrumb-item">
+                <a href="{{ route('dashboard') }}" class="text-decoration-none">
+                    <i class="bi bi-house"></i>
+                    لوحة التحكم
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{{ route('products.index') }}" class="text-decoration-none">المنتجات</a>
+            </li>
+            <li class="breadcrumb-item active text-dark fw-bold">إضافة منتج جديد</li>
+        </ol>
+    </nav>
+
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -167,7 +183,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($product->orderItems()->with('order')->latest()->take(10)->get() as $item)
+                                        @forelse($product->orderItems()->with('order')->latest()->take(10)->get() as $item)
                                         <tr>
                                             <td>
                                                 <a href="{{ route('orders.show', $item->order->id) }}">
@@ -185,7 +201,7 @@
                                                 لا توجد مبيعات سابقة
                                             </td>
                                         </tr>
-                                        @endforeach
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>

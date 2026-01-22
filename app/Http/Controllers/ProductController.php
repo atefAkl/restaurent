@@ -8,24 +8,26 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Exception;
+use Illuminate\Database\QueryException;
 
 class ProductController extends Controller
 {
     public function index()
     {
         $products = Product::with('category')
-            ->when(request('search'), function ($query, $search) {
-                $query->where('name_ar', 'like', "%{$search}%")
-                    ->orWhere('name_en', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
+            ->when(request('search'), function ($query) {
+                $query->where('name_ar', 'like', '%' . request('search') . '%')
+                    ->orWhere('name_en', 'like', '%' . request('search') . '%')
+                    ->orWhere('barcode', 'like', '%' . request('search') . '%')
+                    ->orWhere('sku', 'like', '%' . request('search') . '%');
             })
-            ->when(request('category_id'), function ($query, $categoryId) {
-                $query->where('category_id', $categoryId);
+            ->when(request('category_id'), function ($query) {
+                $query->where('category_id', request('category_id'));
             })
-            ->when(request('is_active'), function ($query, $isActive) {
-                $query->where('is_active', $isActive);
+            ->when(request('status'), function ($query) {
+                $query->where('is_active', request('status') === '1');
             })
-            ->latest()
+            ->orderBy('s_number', 'asc')
             ->paginate(20);
 
         $categories = Category::where('is_active', true)->get();
@@ -41,26 +43,9 @@ class ProductController extends Controller
 
     public function store(ProductRequest $request)
     {
-        $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name_ar' => 'required|string|max:255',
-            'name_en' => 'nullable|string|max:255',
-            'description_ar' => 'nullable|string',
-            'description_en' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'cost' => 'nullable|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'barcode' => 'nullable|string|max:50|unique:products,barcode',
-            'sku' => 'nullable|string|max:50|unique:products,sku',
-            'track_inventory' => 'boolean',
-            'stock_quantity' => 'required|integer|min:0',
-            'min_stock_alert' => 'required|integer|min:0',
-            'is_active' => 'boolean',
-            'is_seasonal' => 'boolean'
-        ]);
-
+        // return $request->all();
         try {
-            $data = $request->except('image');
+            $data = $request->validated();
 
             // Handle image upload
             if ($request->hasFile('image')) {
@@ -75,17 +60,16 @@ class ProductController extends Controller
             $data['is_active'] = $request->boolean('is_active');
             $data['is_seasonal'] = $request->boolean('is_seasonal');
 
+            // Set defaults for optional fields
+            $data['stock_quantity'] = $data['stock_quantity'] ?? 0;
+            $data['min_stock_alert'] = $data['min_stock_alert'] ?? 10;
+            $data['sort_order'] = $data['sort_order'] ?? 0;
+
             Product::create($data);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'تم إضافة المنتج بنجاح'
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'حدث خطأ أثناء إضافة المنتج'
-            ], 400);
+            return redirect()->route('products.index')->with('success', 'تم إضافة المنتج بنجاح');
+        } catch (QueryException $e) {
+            return redirect()->back()->with('error', 'حدث خطأ أثناء إضافة المنتج: ' . $e->getMessage());
         }
     }
 
@@ -106,26 +90,8 @@ class ProductController extends Controller
 
     public function update(ProductRequest $request, Product $product)
     {
-        $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name_ar' => 'required|string|max:255',
-            'name_en' => 'nullable|string|max:255',
-            'description_ar' => 'nullable|string',
-            'description_en' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'cost' => 'nullable|numeric|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'barcode' => 'nullable|string|max:50|unique:products,barcode,' . $product->id,
-            'sku' => 'nullable|string|max:50|unique:products,sku,' . $product->id,
-            'track_inventory' => 'boolean',
-            'stock_quantity' => 'required|integer|min:0',
-            'min_stock_alert' => 'required|integer|min:0',
-            'is_active' => 'boolean',
-            'is_seasonal' => 'boolean'
-        ]);
-
         try {
-            $data = $request->except('image');
+            $data = $request->validated();
 
             // Handle image upload
             if ($request->hasFile('image')) {
@@ -154,7 +120,7 @@ class ProductController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ أثناء تحديث المنتج'
+                'message' => 'حدث خطأ أثناء تحديث المنتج: ' . $e->getMessage()
             ], 400);
         }
     }
@@ -162,8 +128,10 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         try {
-            // Check if product has orders
-            if ($product->orderItems()->exists()) {
+            // Check if product has related orders
+            $hasOrders = $product->orderItems()->exists();
+
+            if ($hasOrders) {
                 return response()->json([
                     'success' => false,
                     'message' => 'لا يمكن حذف المنتج لوجود طلبات مرتبطة به'
@@ -184,7 +152,7 @@ class ProductController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ أثناء حذف المنتج'
+                'message' => 'حدث خطأ أثناء حذف المنتج: ' . $e->getMessage()
             ], 400);
         }
     }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ session('locale') == 'ar' ? 'rtl' : 'ltr' }}">
+<html lang="{{ session('locale', 'ar') }}" dir="{{ $dir ?? 'rtl' }}">
 
 <head>
     <meta charset="utf-8">
@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Restaurant POS') }}</title>
 
+    <link rel="shortcut icon" href="{{ asset('R.png') }}" type="image/x-icon">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=cairo:400,500,600,700&display=swap" rel="stylesheet">
@@ -64,6 +65,33 @@
             border-radius: 12px;
         }
 
+        /* Breadcrumbs */
+        [dir="rtl"] ol.breadcrumb li.breadcrumb-item:before {
+            float: right;
+            margin-inline-end: 8px;
+        }
+
+        /* Button Group */
+        [dir="rtl"] .btn-group .btn {
+            border-radius: 0;
+        }
+
+        [dir="rtl"] .btn-group .btn:only-child {
+            border-radius: 0.25rem;
+        }
+
+        [dir="rtl"] .btn-group .btn:first-child {
+            border-radius: 0 0.25rem 0.25rem 0;
+        }
+
+        [dir="rtl"] .btn-group .btn:last-child {
+            border-radius: 0.25rem 0 0 0.25rem;
+        }
+
+        .card {
+            border-radius: 0 !important;
+        }
+
         /* Navbar */
         .navbar {
             background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
@@ -90,6 +118,11 @@
         .navbar-nav .nav-link.active {
             background-color: rgba(255, 255, 255, 0.1);
             color: white !important;
+        }
+
+        .dropdown-item.active {
+            background-color: var(--primary-color);
+            color: white;
         }
 
         /* Sidebar */
@@ -301,10 +334,27 @@
                         <i class="bi bi-hand-index"></i>
                     </button>
 
-                    <!-- Language Toggle -->
-                    <button class="btn btn-outline-light btn-sm me-2" onclick="toggleLanguage()" title="تبديل اللغة">
-                        <i class="bi bi-translate"></i>
-                    </button>
+                    <!-- Language Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light btn-sm me-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" title="تبديل اللغة">
+                            <i class="bi bi-translate"></i>
+                            {{ session('locale', 'ar') === 'ar' ? 'العربية' : 'English' }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-start">
+                            <li>
+                                <a class="dropdown-item {{ session('locale', 'ar') === 'ar' ? 'active' : '' }}"
+                                    href="{{ route('locale.switch', 'ar') }}">
+                                    <i class="bi bi-flag"></i> العربية
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ session('locale', 'ar') === 'en' ? 'active' : '' }}"
+                                    href="{{ route('locale.switch', 'en') }}">
+                                    <i class="bi bi-flag"></i> English
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
 
                     <!-- User Menu -->
                     <div class="dropdown">
@@ -451,22 +501,6 @@
         // Load touch mode preference
         if (localStorage.getItem('touchMode') === 'true') {
             document.body.classList.add('touch-mode');
-        }
-
-        // Language Toggle
-        function toggleLanguage() {
-            const currentLang = '{{ session('
-            locale ', '
-            ar ') }}';
-            const newLang = currentLang === 'ar' ? 'en' : 'ar';
-
-            fetch(`/locale/${newLang}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    }
-                });
         }
 
         // Common AJAX functions

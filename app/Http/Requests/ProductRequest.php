@@ -14,21 +14,21 @@ class ProductRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'name_ar' => 'required|string|max:255',
-            'name_en' => 'nullable|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'price' => 'required|numeric|min:0',
-            'cost' => 'nullable|numeric|min:0',
-            'description_ar' => 'nullable|string',
-            'description_en' => 'nullable|string',
-            'barcode' => 'nullable|string|max:255|unique:products,barcode,' . $this->product,
-            'sku' => 'nullable|string|max:255|unique:products,sku,' . $this->product,
-            'stock_quantity' => 'nullable|integer|min:0',
-            'min_stock_alert' => 'nullable|integer|min:0',
-            'track_inventory' => 'boolean',
-            'is_seasonal' => 'boolean',
-            'is_active' => 'boolean',
-            'image' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
+            'name_ar'           => 'required|string|max:255',
+            'name_en'           => 'nullable|string|max:255',
+            'category_id'       => 'required|exists:categories,id',
+            'price'             => 'required|numeric|min:0',
+            'cost'              => 'nullable|numeric|min:0',
+            'description_ar'    => 'nullable|string',
+            'description_en'    => 'nullable|string',
+            'barcode'           => 'nullable|string|max:255|unique:products,barcode,' . $this->product,
+            'sku'               => 'nullable|string|max:255|unique:products,sku,' . $this->product,
+            'stock_quantity'    => 'nullable|integer|min:0',
+            'min_stock_alert'   => 'nullable|integer|min:0',
+            'track_inventory'   => 'nullable',
+            'is_seasonal'       => 'nullable',
+            'is_active'         => 'nullable',
+            'image'             => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
         ];
 
         return $rules;

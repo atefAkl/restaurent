@@ -9,14 +9,10 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\LocaleController;
 
 // Language Switch
-Route::get('locale/{locale}', function ($locale) {
-    if (in_array($locale, ['ar', 'en'])) {
-        session(['locale' => $locale]);
-    }
-    return redirect()->back();
-})->name('locale.switch');
+Route::get('locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
 
 // Authentication Routes
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');

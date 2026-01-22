@@ -24,6 +24,7 @@ return new class extends Migration
             $table->integer('stock_quantity')->default(0);
             $table->integer('min_stock_alert')->default(10);
             $table->boolean('is_active')->default(true);
+            $table->string('s_number', 16);
             $table->boolean('is_seasonal')->default(false);
             $table->timestamps();
         });
