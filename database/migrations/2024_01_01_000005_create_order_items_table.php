@@ -19,6 +19,9 @@ return new class extends Migration
             $table->decimal('total_price', 10, 2);
             $table->text('notes')->nullable();
             $table->timestamps();
+
+            $table->engine('InnoDB');
+            $table->charset('utf8mb4');
         });
     }
 

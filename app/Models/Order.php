@@ -12,8 +12,10 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
-        'customer_name',
-        'customer_phone',
+        'customer_id',
+        'in_progress',
+        'address_id',
+        'room_id',
         'type',
         'status',
         'subtotal',
@@ -21,7 +23,9 @@ class Order extends Model
         'discount_amount',
         'total_amount',
         'paid_amount',
+        'remaining_amount',
         'payment_method',
+        'payment_reference',
         'notes',
         'completed_at',
     ];
@@ -32,12 +36,18 @@ class Order extends Model
         'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
+        'remaining_amount' => 'decimal:2',
         'completed_at' => 'datetime',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function orderItems()

@@ -14,14 +14,23 @@ class OrderRequest extends FormRequest
     public function rules()
     {
         return [
-            'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'nullable|string|max:20',
-            'customer_address' => 'nullable|string|max:500',
-            'order_type' => 'required|in:dine_in,takeaway,delivery',
+            'customer_id' => 'nullable|exists:customers,id',
+            'address_id' => 'nullable|exists:addresses,id',
+            'room_id' => 'nullable|exists:rooms,id',
+            'type' => 'required|in:dine_in,takeaway,delivery,catering,subscription',
+            'products' => 'required|array|min:1',
             'products.*' => 'required|exists:products,id',
+            'quantities' => 'required|array|min:1',
             'quantities.*' => 'required|integer|min:1',
+            'prices' => 'required|array|min:1',
             'prices.*' => 'required|numeric|min:0',
-            'delivery_fee' => 'nullable|numeric|min:0',
+            'subtotal' => 'required|numeric|min:0',
+            'tax_amount' => 'required|numeric|min:0',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'total_amount' => 'required|numeric|min:0',
+            'paid_amount' => 'nullable|numeric|min:0',
+            'payment_method' => 'required|in:cash,card,bank_transfer,on_account,subscription,mixed',
+            'payment_reference' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
         ];
     }

@@ -22,6 +22,9 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->enum('status', ['open', 'closed'])->default('open');
             $table->timestamps();
+
+            $table->engine('InnoDB');
+            $table->charset('utf8mb4');
         });
     }
 

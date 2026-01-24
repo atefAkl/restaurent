@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Exception;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -43,33 +44,44 @@ class ProductController extends Controller
 
     public function store(ProductRequest $request)
     {
-        // return $request->all();
         try {
             $data = $request->validated();
 
+            DB::beginTransaction();
+
             // Handle image upload
             if ($request->hasFile('image')) {
-                $image = $request->file('image');
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
+                $image          = $request->file('image');
+                $imageName      = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $image->storeAs('products', $imageName, 'public');
-                $data['image'] = 'products/' . $imageName;
+                $data['image']  = 'products/' . $imageName;
             }
 
-            // Set boolean values
-            $data['track_inventory'] = $request->boolean('track_inventory');
-            $data['is_active'] = $request->boolean('is_active');
-            $data['is_seasonal'] = $request->boolean('is_seasonal');
+            // Set s_number if not provided
+            if (empty($request->s_number)) {
+                $lastProduct = Product::orderBy('id', 'desc')->first();
+                $nextId = $lastProduct ? $lastProduct->id + 1 : 1;
+                $data['s_number'] = str_pad($nextId, 5, '0', STR_PAD_LEFT);
+            } else {
+                $data['s_number'] = $request->s_number;
+            }
 
-            // Set defaults for optional fields
-            $data['stock_quantity'] = $data['stock_quantity'] ?? 0;
-            $data['min_stock_alert'] = $data['min_stock_alert'] ?? 10;
-            $data['sort_order'] = $data['sort_order'] ?? 0;
+            // Set default values and handle booleans
+            $data['track_inventory'] = $request->boolean('track_inventory');
+            $data['is_active']       = $request->boolean('is_active', true);
+            $data['is_seasonal']     = $request->boolean('is_seasonal');
+            $data['is_featured']     = $request->boolean('is_featured');
+
+            $data['stock_quantity']  = $request->input('stock_quantity', 0);
+            $data['min_stock_alert'] = $request->input('min_stock_alert', 10);
 
             Product::create($data);
+            DB::commit();
 
             return redirect()->route('products.index')->with('success', 'تم إضافة المنتج بنجاح');
-        } catch (QueryException $e) {
-            return redirect()->back()->with('error', 'حدث خطأ أثناء إضافة المنتج: ' . $e->getMessage());
+        } catch (Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'حدث خطأ أثناء إضافة المنتج: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -93,6 +105,8 @@ class ProductController extends Controller
         try {
             $data = $request->validated();
 
+            DB::beginTransaction();
+
             // Handle image upload
             if ($request->hasFile('image')) {
                 // Delete old image
@@ -100,28 +114,42 @@ class ProductController extends Controller
                     Storage::disk('public')->delete($product->image);
                 }
 
-                $image = $request->file('image');
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
+                $image          = $request->file('image');
+                $imageName      = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $image->storeAs('products', $imageName, 'public');
-                $data['image'] = 'products/' . $imageName;
+                $data['image']  = 'products/' . $imageName;
             }
 
             // Set boolean values
             $data['track_inventory'] = $request->boolean('track_inventory');
-            $data['is_active'] = $request->boolean('is_active');
-            $data['is_seasonal'] = $request->boolean('is_seasonal');
+            $data['is_active']       = $request->boolean('is_active');
+            $data['is_seasonal']     = $request->boolean('is_seasonal');
+            $data['is_featured']     = $request->boolean('is_featured');
+
+            // Set values for numbers
+            $data['stock_quantity']  = $request->input('stock_quantity', $product->stock_quantity);
+            $data['min_stock_alert'] = $request->input('min_stock_alert', $product->min_stock_alert);
 
             $product->update($data);
+            DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'تم تحديث المنتج بنجاح'
-            ]);
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم تحديث المنتج بنجاح'
+                ]);
+            }
+
+            return redirect()->route('products.index')->with('success', 'تم تحديث المنتج بنجاح');
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'حدث خطأ أثناء تحديث المنتج: ' . $e->getMessage()
-            ], 400);
+            DB::rollBack();
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء تحديث المنتج: ' . $e->getMessage()
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'حدث خطأ أثناء تحديث المنتج: ' . $e->getMessage())->withInput();
         }
     }
 

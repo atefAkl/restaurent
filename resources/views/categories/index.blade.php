@@ -72,17 +72,18 @@
                                 </div>
                             </div>
 
-                            @if($category->image)
-                            <img src="{{ asset('storage/' . $category->image) }}"
-                                alt="{{ $category->name_ar }}"
-                                class="img-fluid rounded mb-3" style="max-height: 150px; object-fit: cover;"
-                                onerror="console.log('Image error:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            @else
-                            <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3"
-                                style="height: 150px; {{ $category->image ? 'display:none;' : '' }}">
-                                <i class="bi bi-folder fs-1 text-muted"></i>
+                            <div class="category-image-wrapper mb-3 text-center">
+                                @if($category->image)
+                                <img src="{{ asset('storage/' . $category->image) }}"
+                                    alt="{{ $category->name_ar }}"
+                                    class="img-fluid rounded" style="height: 150px; width: 100%; object-fit: cover;"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                @endif
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                                    style="height: 150px; {{ $category->image ? 'display:none;' : '' }}">
+                                    <i class="bi bi-folder fs-1 text-muted"></i>
+                                </div>
                             </div>
-                            @endif
 
                             <p class="card-text">{{ Str::limit($category->description_ar, 100) }}</p>
 

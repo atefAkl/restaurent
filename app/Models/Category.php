@@ -28,6 +28,11 @@ class Category extends Model
         return $this->hasMany(Product::class);
     }
 
+    public function getNameAttribute()
+    {
+        return app()->getLocale() === 'ar' ? $this->name_ar : $this->name_en;
+    }
+
     public function activeProducts()
     {
         return $this->hasMany(Product::class)->where('is_active', true);

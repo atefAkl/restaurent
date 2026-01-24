@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('tax_number')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->engine('InnoDB');
+            $table->charset('utf8mb4');
         });
     }
 

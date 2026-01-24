@@ -39,63 +39,6 @@
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <!-- <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="card-title">إجمالي المنتجات</h4>
-                            <p class="card-text">{{ App\Models\Product::count() }}</p>
-                        </div>
-                        <i class="bi bi-box fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="card-title">المنتجات النشطة</h4>
-                            <p class="card-text">{{ App\Models\Product::where('is_active', true)->count() }}</p>
-                        </div>
-                        <i class="bi bi-check-circle fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="card-title">القيمة الإجمالية</h4>
-                            <p class="card-text">{{ number_format(App\Models\Product::sum('price'), 2) }} ريال</p>
-                        </div>
-                        <i class="bi bi-cash-stack fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="card-title">منخفض المخزون</h4>
-                            <p class="card-text">{{ App\Models\Product::whereColumn('stock_quantity', '<', 'min_stock_alert')->count() }}</p>
-                        </div>
-                        <i class="bi bi-exclamation-triangle fs-1"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> -->
-
-    <!-- Product Form -->
     <form method="POST" action="{{ route('products.store') }}" enctype="multipart/form-data" id="productForm">
         @csrf
         <div class="row">
@@ -140,7 +83,7 @@
                                     <option value="">اختر الفئة</option>
                                     @foreach($categories as $category)
                                     <option value="{{ $category->id }}"
-                                        {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ (request()->has('category_id') && request('category_id') == $category->id) || old('category_id') == $category->id ? 'selected' : '' }}>
                                         {{ $category->name_ar }}
                                     </option>
                                     @endforeach
@@ -155,7 +98,7 @@
                                     <div class="mb-3">
                                         <label for="price" class="form-label">السعر *</label>
                                         <input type="number" class="form-control" id="price" name="price"
-                                            value="{{ old('price') }}" step="0.01" min="0" required>
+                                           autocomplete value="{{ old('price') }}" step="0.01" min="0" required>
                                         @error('price')
                                         <div class="text-danger small">{{ $message }}</div>
                                         @enderror
@@ -165,7 +108,7 @@
                                     <div class="mb-3">
                                         <label for="cost" class="form-label">التكلفة</label>
                                         <input type="number" class="form-control" id="cost" name="cost"
-                                            value="{{ old('cost') }}" step="0.01" min="0">
+                                           autocomplete value="{{ old('cost') }}" step="0.01" min="0">
                                         @error('cost')
                                         <div class="text-danger small">{{ $message }}</div>
                                         @enderror
@@ -177,7 +120,7 @@
                                     <div class="mb-3">
                                         <label for="barcode" class="form-label">الباركود</label>
                                         <input type="text" class="form-control" id="barcode" name="barcode"
-                                            value="{{ old('barcode') }}" placeholder="اختياري">
+                                            autocomplete value="{{ old('barcode') }}" placeholder="اختياري">
                                         @error('barcode')
                                         <div class="text-danger small">{{ $message }}</div>
                                         @enderror
@@ -226,8 +169,8 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="description" class="form-label">الوصف</label>
-                                        <textarea class="form-control" id="description" name="description" rows="3">{{ old('description') }}</textarea>
+                                        <label for="description_ar" class="form-label">الوصف</label>
+                                        <textarea class="form-control" id="description_ar" name="description_ar" rows="3">{{ old('description_ar') }}</textarea>
                                         @error('description_ar')
                                         <div class="text-danger small">{{ $message }}</div>
                                         @enderror
@@ -292,6 +235,11 @@
                                     حفظ المنتج
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </form>
 </div>
 @endsection

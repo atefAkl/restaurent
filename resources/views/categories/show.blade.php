@@ -24,16 +24,18 @@
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-body text-center">
-                            @if($category->image)
-                            <img src="{{ asset('storage/' . $category->image) }}"
-                                alt="{{ $category->name_ar }}"
-                                class="img-fluid rounded mb-3" style="max-height: 200px;">
-                            @else
-                            <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3"
-                                style="height: 200px;">
-                                <i class="bi bi-folder fs-1 text-muted"></i>
+                            <div class="category-image-wrapper mb-3">
+                                @if($category->image)
+                                <img src="{{ asset('storage/' . $category->image) }}"
+                                    alt="{{ $category->name_ar }}"
+                                    class="img-fluid rounded" style="max-height: 200px;"
+                                    onerror="this.style.display='none'; document.getElementById('placeholder-icon').style.display='flex';">
+                                @endif
+                                <div id="placeholder-icon" class="bg-light rounded align-items-center justify-content-center"
+                                    style="height: 200px; {{ $category->image ? 'display:none;' : 'display:flex;' }}">
+                                    <i class="bi bi-folder fs-1 text-muted"></i>
+                                </div>
                             </div>
-                            @endif
 
                             <h4>{{ $category->name_ar }}</h4>
                             <p class="text-muted">{{ $category->name_en }}</p>
@@ -115,7 +117,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($category->products()->latest()->take(10)->get() as $product)
+                                        @forelse($category->products()->latest()->take(10)->get() as $product)
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
@@ -170,7 +172,7 @@
                                                 لا توجد منتجات في هذه الفئة
                                             </td>
                                         </tr>
-                                        @endforeach
+                                        @endforelse
                                     </tbody>
                                 </table>
                             </div>

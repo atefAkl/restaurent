@@ -132,8 +132,9 @@ class CategoryController extends Controller
     {
         $categories = Category::where('is_active', true)
             ->orderBy('sort_order')
+            ->select('id', 'name_ar', 'name_en', 'image')
             ->get();
 
-        return $categories;
+        return response()->json($categories);
     }
 }

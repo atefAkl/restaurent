@@ -10,6 +10,7 @@ use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\OrderItemController;
 
 // Language Switch
 Route::get('locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
@@ -33,6 +34,7 @@ Route::resource('orders', OrderController::class)->middleware('auth');
 Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus')->middleware('auth');
 Route::get('/orders/{order}/print', [OrderController::class, 'print'])->name('orders.print')->middleware('auth');
 Route::get('/orders/kitchen', [OrderController::class, 'kitchenOrders'])->name('orders.kitchen')->middleware('auth');
+Route::get('/orders/items', [OrderItemController::class, 'store'])->name('orders.items.store')->middleware('auth');
 
 // Products Routes
 Route::resource('products', ProductController::class)->middleware('auth');
@@ -72,6 +74,14 @@ Route::prefix('reports')->middleware('auth')->group(function () {
 Route::prefix('api')->middleware('auth')->group(function () {
     // Get current shift info
     Route::get('/current-shift', [ShiftController::class, 'getCurrentShift']);
+
+    // POS API Routes
+    Route::get('/categories', [CategoryController::class, 'getActiveCategories']);
+    Route::get('/categories/{categoryId}/products', [ProductController::class, 'getProductsByCategory']);
+    Route::get('/customers/search', function (\Illuminate\Http\Request $request) {
+        $customer = \App\Models\Customer::where('phone', $request->phone)->first();
+        return response()->json($customer);
+    });
 
     // Get products by category
     Route::get('/products/category/{categoryId}', [ProductController::class, 'getProductsByCategory']);

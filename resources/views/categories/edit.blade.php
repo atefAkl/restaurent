@@ -81,9 +81,16 @@
                                     <div class="mt-2">
                                         <small class="text-muted">الصورة الحالية:</small>
                                         <br>
-                                        <img src="{{ asset('storage/' . $category->image) }}"
-                                            alt="{{ $category->name_ar }}"
-                                            class="rounded mt-1" style="width: 100px; height: 100px; object-fit: cover;">
+                                        <div class="position-relative d-inline-block">
+                                            <img src="{{ asset('storage/' . $category->image) }}"
+                                                alt="{{ $category->name_ar }}"
+                                                class="rounded mt-1" style="width: 100px; height: 100px; object-fit: cover;"
+                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                            <div class="bg-light rounded mt-1 align-items-center justify-content-center"
+                                                style="width: 100px; height: 100px; display: none;">
+                                                <i class="bi bi-folder text-muted"></i>
+                                            </div>
+                                        </div>
                                     </div>
                                     @endif
 

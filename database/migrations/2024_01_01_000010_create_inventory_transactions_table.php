@@ -17,6 +17,9 @@ return new class extends Migration
             $table->decimal('unit_cost', 10, 2)->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
+
+            $table->engine('InnoDB');
+            $table->charset('utf8mb4');
         });
     }
 

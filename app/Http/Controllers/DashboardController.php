@@ -39,7 +39,6 @@ class DashboardController extends Controller
 
         // Low Stock Alerts
         $lowStockProducts = Product::where('track_inventory', true)
-            ->whereColumn('stock_quantity', '<=', 'min_stock_alert')
             ->count();
 
         // Recent Orders

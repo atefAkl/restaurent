@@ -1,45 +1,75 @@
-@extends('layouts.app')
+@extends('layouts.order')
 
 @section('title', 'إنشاء طلب جديد')
 
 @section('content')
 
 <div class="container-fluid">
-    <!-- Breadcrumbs -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb bg-light p-2 rounded">
-            <li class="breadcrumb-item">
-                <a href="{{ route('dashboard') }}" class="text-decoration-none">
-                    <i class="bi bi-house"></i>
-                    لوحة التحكم
-                </a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="{{ route('orders.index') }}" class="text-decoration-none">الطلبات</a>
-            </li>
-            <li class="breadcrumb-item active text-dark fw-bold">إنشاء طلب جديد</li>
-        </ol>
-    </nav>
+<style>
+    .text-start {
+        text-align: left;
+    }
+    [dir=rtl] .text-start {
+        text-align: right;
+    }
 
-    <!-- Page Header with Background -->
-    <div class="bg-light py-4 mb-4 shadow-sm">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-0 text-dark fw-bold">إنشاء طلب جديد</h1>
-                    <p class="text-muted mb-0 mt-2">إضافة طلب جديد للعميل</p>
-                </div>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
-                        <i class="bi bi-arrow-right"></i>
-                        العودة
+    .text-sm {
+        font-size: 0.875rem !important;
+    }
+</style>
+    {{-- Top Devisions --}}
+    <div class="row">
+        <div class="bg-secondary col-2">
+            <h4 class="text-white text-center">Categories</h4>
+            <div>
+                <div class="p-2 border-bottom text-white">
+                    <button href="" class="btn btn-link btn-block text-white w-100 text-start text-decoration-none">
+                        All
                     </button>
                 </div>
+                @foreach($categories as $category)
+                <div class="p-2 border-bottom text-white">
+                    <button href="" class="btn btn-link btn-block text-white w-100 text-start text-decoration-none">
+                        {{ $category->name }}
+                    </button>
+                </div>
+                @endforeach
             </div>
         </div>
+        <div class="bg-secondary col-6">
+            <h4 class="text-white text-center">Products</h4>
+            <div class="row">
+                @foreach($products as $product)
+                <div class="col col-md-3 p-2 border-bottom text-white">
+                    <div class="card">
+                        @if ($product->image)
+                            <img  role="logo" src="{{asset('storage/'.$product->image)}}"  class="p-3 card-img-top" alt="{{$product->description_ar}}">
+                        @else
+                            <img  role="icon" src="{{asset('storage/products/default.meal.icon.png')}}"  class="px-3 card-img-top" alt="{{$product->description_ar}}">
+                        @endif
+                        <div class="card-body px-1">
+                            <p class="text-sm text-center fw-bold card-title">{{$product->name}}</p>
+                            
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        <div class="bg-secondary col-4">
+            <h4 class="text-white text-center">Order Items</h4>
+            <form action="{{route('orders.items.store')}}" method="POST">
+                @csrf
+                <input type="hidden" name="order_id" value="{{ $order->id }}">
+
+            </form>
+        </div>
     </div>
+    {{-- Categories --}}
+</div>
 
-
+    <!-- Page Header with Background -->
+<div class="container">
     <!-- Order Form -->
     <form method="POST" action="{{ route('orders.store') }}" id="orderForm">
         @csrf

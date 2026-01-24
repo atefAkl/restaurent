@@ -43,13 +43,13 @@
                             @if($product->image)
                             <img src="{{ asset('storage/' . $product->image) }}"
                                 alt="{{ $product->name_ar }}"
-                                class="img-fluid rounded mb-3" style="max-height: 300px;">
-                            @else
+                                class="img-fluid rounded mb-3" style="max-height: 300px;"
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            @endif
                             <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3"
-                                style="height: 300px;">
+                                style="height: 300px; {{ $product->image ? 'display:none;' : '' }}">
                                 <i class="bi bi-image fs-1 text-muted"></i>
                             </div>
-                            @endif
 
                             <h4>{{ $product->name_ar }}</h4>
                             <p class="text-muted">{{ $product->name_en }}</p>

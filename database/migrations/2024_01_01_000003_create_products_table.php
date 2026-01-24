@@ -21,12 +21,15 @@ return new class extends Migration
             $table->string('barcode')->nullable();
             $table->string('sku')->unique()->nullable();
             $table->boolean('track_inventory')->default(true);
-            $table->integer('stock_quantity')->default(0);
             $table->integer('min_stock_alert')->default(10);
             $table->boolean('is_active')->default(true);
             $table->string('s_number', 16);
             $table->boolean('is_seasonal')->default(false);
+            $table->boolean('is_featured')->default(false);
             $table->timestamps();
+
+            $table->engine('InnoDB');
+            $table->charset('utf8mb4');
         });
     }
 

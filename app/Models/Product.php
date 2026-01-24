@@ -22,10 +22,10 @@ class Product extends Model
         'barcode',
         'sku',
         'track_inventory',
-        'stock_quantity',
         'min_stock_alert',
         'is_active',
         'is_seasonal',
+        'is_featured',
     ];
 
     protected $casts = [
@@ -34,7 +34,23 @@ class Product extends Model
         'track_inventory' => 'boolean',
         'is_active' => 'boolean',
         'is_seasonal' => 'boolean',
+        'is_featured' => 'boolean',
     ];
+
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        if ($this->image) {
+            return asset('storage/' . $this->image);
+        }
+        return asset('images/no-image.png');
+    }
+
+    public function getNameAttribute()
+    {
+        return app()->getLocale() === 'ar' ? $this->name_ar : $this->name_en;
+    }
 
     public function category()
     {

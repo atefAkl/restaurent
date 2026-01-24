@@ -21,6 +21,8 @@ class OrderController extends Controller
             ->latest()
             ->paginate(20);
 
+
+
         return view('orders.index', compact('orders'));
     }
 
@@ -28,68 +30,96 @@ class OrderController extends Controller
     {
         $categories = Category::with('activeProducts')->get();
         $products = Product::where('is_active', true)->get();
-        return view('orders.create', compact('categories', 'products'));
+        $order = Order::where(['status' => 'in_progress', 'user_id' => Auth::id()])->latest()->first();
+        if (!$order) {
+            $order = Order::create([
+                'order_number' => 'TEMP-' . time() . '-' . Auth::id(),
+                'user_id' => Auth::id(),
+                'status' => 'in_progress',
+                'subtotal' => 0,
+                'tax_amount' => 0,
+                'discount_amount' => 0,
+                'total_amount' => 0,
+                'paid_amount' => 0,
+                'remaining_amount' => 0,
+            ]);
+        }
+        return view('orders.create', compact('categories', 'products', 'order'));
     }
 
     public function store(OrderRequest $request)
     {
-        $data = OrderRequest::validate($request->all());
-        $data['user_id'] = Auth::id();
-
         try {
             DB::beginTransaction();
-            $order = Order::create($data);
+
+            // Generate order number
+            $lastOrder = Order::latest()->first();
+            $orderNumber = 'ORD-' . date('Ymd') . '-' . str_pad(($lastOrder ? $lastOrder->id + 1 : 1), 4, '0', STR_PAD_LEFT);
+
+            // Create order
+            $orderData = [
+                'order_number' => $orderNumber,
+                'user_id' => Auth::id(),
+                'customer_id' => $request->customer_id,
+                'customer_name' => $request->customer_name,
+                'customer_phone' => $request->customer_phone,
+                'customer_address' => $request->customer_address,
+                'room_number' => $request->room_number,
+                'type' => $request->type,
+                'status' => 'pending',
+                'subtotal' => $request->subtotal,
+                'tax_amount' => $request->tax_amount,
+                'discount_amount' => $request->discount_amount ?? 0,
+                'total_amount' => $request->total_amount,
+                'paid_amount' => $request->paid_amount ?? 0,
+                'remaining_amount' => $request->total_amount - ($request->paid_amount ?? 0),
+                'payment_method' => $request->payment_method,
+                'payment_reference' => $request->payment_reference,
+                'notes' => $request->notes,
+            ];
+
+            $order = Order::create($orderData);
 
             // Add Order Items
-            $subtotal = 0;
-            foreach ($request->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
+            if ($request->has('products') && is_array($request->products)) {
+                foreach ($request->products as $index => $productId) {
+                    $quantity = $request->quantities[$index];
+                    $price = $request->prices[$index];
+                    $product = Product::findOrFail($productId);
 
-                // Check stock
-                if ($product->track_inventory && $product->stock_quantity < $item['quantity']) {
-                    throw new Exception("المنتج '{$product->name_ar}' غير متوفر بالكمية المطلوبة");
+                    // Check stock
+                    if ($product->track_inventory && $product->stock_quantity < $quantity) {
+                        throw new Exception("المنتج '{$product->name_ar}' غير متوفر بالكمية المطلوبة");
+                    }
+
+                    // Create order item
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $productId,
+                        'quantity' => $quantity,
+                        'price' => $price,
+                        'total_price' => $price * $quantity,
+                    ]);
+
+                    // Update stock
+                    if ($product->track_inventory) {
+                        $product->stock_quantity -= $quantity;
+                        $product->save();
+                    }
                 }
-
-                $orderItem = new OrderItem();
-                $orderItem->order_id = $order->id;
-                $orderItem->product_id = $item['product_id'];
-                $orderItem->quantity = $item['quantity'];
-                $orderItem->notes = $item['notes'] ?? null;
-                $orderItem->save();
-
-                $subtotal += $orderItem->total_price;
             }
-
-            // Apply Coupon
-            $discountAmount = 0;
-            if ($request->coupon_code) {
-                $coupon = Coupon::where('code', $request->coupon_code)->first();
-                if ($coupon && $coupon->isValid($subtotal)) {
-                    $discountAmount = $coupon->calculateDiscount($subtotal);
-                    $coupon->incrementUsage();
-                }
-            }
-
-            // Calculate Totals
-            $order->subtotal = $subtotal;
-            $order->discount_amount = $discountAmount;
-            $order->tax_amount = ($subtotal - $discountAmount) * 0.15; // Saudi VAT
-            $order->total_amount = $order->subtotal + $order->tax_amount - $order->discount_amount;
-            $order->save();
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'order' => $order->load('orderItems.product'),
-                'message' => 'تم إنشاء الطلب بنجاح'
-            ]);
+            // Check if print is requested
+            if ($request->has('print_receipt') && $request->print_receipt == '1') {
+                return redirect()->route('orders.print', $order->id);
+            }
+
+            return redirect()->route('orders.index')->with('success', 'تم إنشاء الطلب بنجاح');
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            return redirect()->back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
         }
     }
 
