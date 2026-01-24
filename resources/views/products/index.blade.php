@@ -114,10 +114,10 @@
                                     class="rounded" style="width: 50px; height: 50px; object-fit: cover;"
                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 @else
-                                <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                                    style="width: 50px; height: 50px; {{ $product->image ? 'display:none;' : '' }}">
-                                    <i class="bi bi-image text-muted"></i>
-                                </div>
+                                <img src="{{ asset('storage/products/default.meal.icon.png') }}"
+                                    alt="{{ $product->name_ar }}"
+                                    class="rounded" style="width: 50px; height: 50px; object-fit: cover;"
+                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 @endif
                             </td>
                             <td>
@@ -151,7 +151,7 @@
                                 <code>{{ $product->barcode }}</code>
                             </td>
                             <td>
-                                <form action="{{ route('products.toggleStatus', $product->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('products.toggleStatus', [$product->id]) }}" method="POST" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-sm {{ $product->is_active ? 'btn-success' : 'btn-secondary' }}">
                                         <i class="bi {{ $product->is_active ? 'bi-check-circle' : 'bi-x-circle' }}"></i>
@@ -161,15 +161,15 @@
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <a href="{{ route('products.show', $product->id) }}"
+                                    <a href="{{ route('products.show', ['product' => $product->id]) }}"
                                         class="btn btn-sm btn-outline-primary" title="عرض">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{{ route('products.edit', $product->id) }}"
+                                    <a href="{{ route('products.edit', [$product->id]) }}"
                                         class="btn btn-sm btn-outline-warning" title="تعديل">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('products.destroy', [$product->id]) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger"

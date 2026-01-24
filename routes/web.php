@@ -37,10 +37,18 @@ Route::get('/orders/kitchen', [OrderController::class, 'kitchenOrders'])->name('
 Route::get('/orders/items', [OrderItemController::class, 'store'])->name('orders.items.store')->middleware('auth');
 
 // Products Routes
-Route::resource('products', ProductController::class)->middleware('auth');
-Route::post('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus')->middleware('auth');
-Route::get('/products/by-category/{categoryId}', [ProductController::class, 'getProductsByCategory'])->name('products.by-category')->middleware('auth');
-Route::get('/products/low-stock', [ProductController::class, 'lowStock'])->name('products.low-stock')->middleware('auth');
+Route::group(['middleware' => 'auth'], function () {
+    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/{product}/show', [ProductController::class, 'show'])->name('products.show');
+    Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+    Route::post('/products/store', [ProductController::class, 'store'])->name('products.store');
+    Route::put('/products/{product}/update', [ProductController::class, 'update'])->name('products.update');
+    Route::delete('/products/{product}/destroy', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::post('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
+    Route::get('/products/by-category/{categoryId}', [ProductController::class, 'getProductsByCategory'])->name('products.by-category');
+    Route::get('/products/low-stock', [ProductController::class, 'lowStock'])->name('products.low-stock');
+});
 
 // Categories Routes
 Route::resource('categories', CategoryController::class)->middleware('auth');

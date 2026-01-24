@@ -9,7 +9,7 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">تعديل المنتج</h1>
                 <div class="btn-group">
-                    <a href="{{ route('products.show', $product->id) }}" class="btn btn-outline-primary">
+                    <a href="{{ route('products.show', ['product' => $product->id]) }}" class="btn btn-outline-primary">
                         <i class="bi bi-eye"></i>
                         عرض
                     </a>
@@ -73,46 +73,10 @@
                                             @enderror
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="cost" class="form-label">التكلفة</label>
-                                            <input type="number" class="form-control" id="cost" name="cost"
-                                                value="{{ old('cost', $product->cost) }}" step="0.01" min="0">
-                                            @error('cost')
-                                            <div class="text-danger small">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="image" class="form-label">صورة المنتج</label>
-                                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                                    @error('image')
-                                    <div class="text-danger small">{{ $message }}</div>
-                                    @enderror
-
-                                    @if($product->image)
-                                    <div class="mt-2">
-                                        <small class="text-muted">الصورة الحالية:</small>
-                                        <br>
-                                        <div class="position-relative d-inline-block">
-                                            <img src="{{ asset('storage/' . $product->image) }}"
-                                                alt="{{ $product->name_ar }}"
-                                                class="rounded mt-1" style="width: 100px; height: 100px; object-fit: cover;"
-                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                            <div class="bg-light rounded mt-1 align-items-center justify-content-center"
-                                                style="width: 100px; height: 100px; display: none;">
-                                                <i class="bi bi-image text-muted"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endif
-
-                                    <small class="text-muted">الصيغ المسموح بها: jpg, jpeg, png, gif</small>
-                                </div>
 
                                 <div class="row">
                                     <div class="col-md-6">
@@ -137,33 +101,7 @@
                                     </div>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="stock_quantity" class="form-label">الكمية في المخزون</label>
-                                            <input type="number" class="form-control" id="stock_quantity" name="stock_quantity"
-                                                value="{{ old('stock_quantity', $product->stock_quantity) }}" min="0">
-                                            @error('stock_quantity')
-                                            <div class="text-danger small">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="min_stock_alert" class="form-label">حد التنبيه الأدنى</label>
-                                            <input type="number" class="form-control" id="min_stock_alert" name="min_stock_alert"
-                                                value="{{ old('min_stock_alert', $product->min_stock_alert) }}" min="0">
-                                            @error('min_stock_alert')
-                                            <div class="text-danger small">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="description_ar" class="form-label">الوصف (عربي)</label>
                                     <textarea class="form-control" id="description_ar" name="description_ar" rows="3">{{ old('description_ar', $product->description_ar) }}</textarea>
@@ -171,44 +109,13 @@
                                     <div class="text-danger small">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
-                            <div class="col-md-6">
+
                                 <div class="mb-3">
                                     <label for="description_en" class="form-label">الوصف (إنجليزي)</label>
                                     <textarea class="form-control" id="description_en" name="description_en" rows="3">{{ old('description_en', $product->description_en) }}</textarea>
                                     @error('description_en')
                                     <div class="text-danger small">{{ $message }}</div>
                                     @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="track_inventory" name="track_inventory"
-                                        {{ old('track_inventory', $product->track_inventory) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="track_inventory">
-                                        تتبع المخزون
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="is_seasonal" name="is_seasonal"
-                                        {{ old('is_seasonal', $product->is_seasonal) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_seasonal">
-                                        منتج موسمي
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active"
-                                        {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_active">
-                                        نشط
-                                    </label>
                                 </div>
                             </div>
                         </div>

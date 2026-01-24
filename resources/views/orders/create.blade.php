@@ -1,26 +1,27 @@
 @extends('layouts.order')
 
-@section('title', 'إنشاء طلب جديد')
+@section('title', __('app.titles.create_order'))
 
 @section('content')
 
 <div class="container-fluid">
-<style>
-    .text-start {
-        text-align: left;
-    }
-    [dir=rtl] .text-start {
-        text-align: right;
-    }
+    <style>
+        .text-start {
+            text-align: left;
+        }
 
-    .text-sm {
-        font-size: 0.875rem !important;
-    }
-</style>
+        [dir=rtl] .text-start {
+            text-align: right;
+        }
+
+        .text-sm {
+            font-size: 0.875rem !important;
+        }
+    </style>
     {{-- Top Devisions --}}
     <div class="row">
-        <div class="bg-secondary col-2">
-            <h4 class="text-white text-center">Categories</h4>
+        <div class="col-2 p-0">
+            <h4 class="bg-secondary text-white text-center py-2">Categories</h4>
             <div>
                 <div class="p-2 border-bottom text-white">
                     <button href="" class="btn btn-link btn-block text-white w-100 text-start text-decoration-none">
@@ -28,36 +29,38 @@
                     </button>
                 </div>
                 @foreach($categories as $category)
-                <div class="p-2 border-bottom text-white">
-                    <button href="" class="btn btn-link btn-block text-white w-100 text-start text-decoration-none">
-                        {{ $category->name }}
+                <div class="border-bottom text-white">
+                    <button href="" class="btn btn-link btn-block w-100 text-start text-decoration-none">
+                        {{ $category->name }} {{$active_category->id == $category->id ? '(Active)' : ''}}
                     </button>
                 </div>
                 @endforeach
             </div>
         </div>
-        <div class="bg-secondary col-6">
-            <h4 class="text-white text-center">Products</h4>
-            <div class="row">
+        <div class="col-6 p-0">
+            <h4 class="bg-secondary text-white text-center py-2">Products</h4>
+            <div class="d-flex p-3 justify-content-start">
                 @foreach($products as $product)
-                <div class="col col-md-3 p-2 border-bottom text-white">
-                    <div class="card">
+                <div class="p-1">
+                    <div class="card " style="width: 200px; height: 130px; position:relative; overflow: hidden;">
                         @if ($product->image)
-                            <img  role="logo" src="{{asset('storage/'.$product->image)}}"  class="p-3 card-img-top" alt="{{$product->description_ar}}">
+                        <img role="logo" src="{{asset('storage/'.$product->image)}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
                         @else
-                            <img  role="icon" src="{{asset('storage/products/default.meal.icon.png')}}"  class="px-3 card-img-top" alt="{{$product->description_ar}}">
+                        <img role="icon" src="{{asset('storage/products/default.meal.icon.png')}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
                         @endif
-                        <div class="card-body px-1">
-                            <p class="text-sm text-center fw-bold card-title">{{$product->name}}</p>
-                            
-                        </div>
+                        <p class="position-absolute" style="display: block; line-height: 130px; text-align: center; top: 0; color: #fff; height: 100%; background-color: #3d3e3dcc; width: 100%; font-weight: bold;">
+                            {{$product->name}}
+                        </p>
+
+                        <p class="position-absolute bottom-0 end-0 p-2 text-light fw-bold">{{$product->price}}</p>
+
                     </div>
                 </div>
                 @endforeach
             </div>
         </div>
-        <div class="bg-secondary col-4">
-            <h4 class="text-white text-center">Order Items</h4>
+        <div class="col-4 p-0">
+            <h4 class="bg-secondary text-white text-center py-2">Order Items</h4>
             <form action="{{route('orders.items.store')}}" method="POST">
                 @csrf
                 <input type="hidden" name="order_id" value="{{ $order->id }}">
@@ -68,7 +71,7 @@
     {{-- Categories --}}
 </div>
 
-    <!-- Page Header with Background -->
+<!-- Page Header with Background -->
 <div class="container">
     <!-- Order Form -->
     <form method="POST" action="{{ route('orders.store') }}" id="orderForm">

@@ -30,8 +30,9 @@ class OrderController extends Controller
     {
         $categories = Category::with('activeProducts')->get();
         $products = Product::where('is_active', true)->get();
-        $order = Order::where(['status' => 'in_progress', 'user_id' => Auth::id()])->latest()->first();
+        $order = Order::where(['is_active' => true, 'status' => 'in_progress', 'user_id' => Auth::id()])->latest()->first();
         if (!$order) {
+
             $order = Order::create([
                 'order_number' => 'TEMP-' . time() . '-' . Auth::id(),
                 'user_id' => Auth::id(),
@@ -42,9 +43,11 @@ class OrderController extends Controller
                 'total_amount' => 0,
                 'paid_amount' => 0,
                 'remaining_amount' => 0,
+                'is_active' => true,
             ]);
         }
-        return view('orders.create', compact('categories', 'products', 'order'));
+        $active_category = $categories->first();
+        return view('orders.create', compact('categories', 'products', 'order', 'active_category'));
     }
 
     public function store(OrderRequest $request)

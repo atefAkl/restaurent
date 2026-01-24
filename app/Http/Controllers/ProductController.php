@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateProductRequest;
 use App\Http\Requests\ProductRequest;
 use App\Models\Product;
 use App\Models\Category;
@@ -100,34 +101,20 @@ class ProductController extends Controller
         return view('products.edit', compact('product', 'categories'));
     }
 
-    public function update(ProductRequest $request, Product $product)
+    public function update(UpdateProductRequest $request, Product $product)
     {
+        //return $request->all();
         try {
             $data = $request->validated();
 
             DB::beginTransaction();
 
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                // Delete old image
-                if ($product->image) {
-                    Storage::disk('public')->delete($product->image);
-                }
-
-                $image          = $request->file('image');
-                $imageName      = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                $image->storeAs('products', $imageName, 'public');
-                $data['image']  = 'products/' . $imageName;
-            }
-
             // Set boolean values
             $data['track_inventory'] = $request->boolean('track_inventory');
-            $data['is_active']       = $request->boolean('is_active');
             $data['is_seasonal']     = $request->boolean('is_seasonal');
             $data['is_featured']     = $request->boolean('is_featured');
 
             // Set values for numbers
-            $data['stock_quantity']  = $request->input('stock_quantity', $product->stock_quantity);
             $data['min_stock_alert'] = $request->input('min_stock_alert', $product->min_stock_alert);
 
             $product->update($data);
@@ -187,13 +174,13 @@ class ProductController extends Controller
 
     public function toggleStatus(Product $product)
     {
-        $product->is_active = !$product->is_active;
-        $product->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => $product->is_active ? 'تم تفعيل المنتج' : 'تم إلغاء تفعيل المنتج'
-        ]);
+        try {
+            $product->is_active = !$product->is_active;
+            $product->save();
+            return redirect()->back()->with(['success' => 'Status has been switched']);
+        } catch (Exception $err) {
+            return redirect()->back()->with(['error' => 'Status has not been switched due to ' . $err->getMessage()]);
+        }
     }
 
     public function getProductsByCategory($categoryId)

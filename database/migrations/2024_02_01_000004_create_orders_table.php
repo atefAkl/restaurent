@@ -26,6 +26,7 @@ return new class extends Migration
             $table->enum('payment_method', ['cash', 'card', 'bank_transfer', 'on_account', 'subscription', 'mixed'])->default('cash');
             $table->string('payment_reference')->nullable(); // For machine name or bank account id
             $table->text('notes')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
 
