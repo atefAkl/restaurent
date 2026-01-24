@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->string('order_number')->unique();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('customer_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('address_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('room_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('user_id');
+            $table->foreignId('customer_id')->nullable();
+            $table->foreignId('address_id')->nullable();
+            $table->foreignId('room_id')->nullable();
             $table->enum('type', ['dine_in', 'takeaway', 'delivery', 'catering', 'subscription'])->default('dine_in');
             $table->enum('status', ['in_progress', 'pending', 'preparing', 'ready', 'completed', 'cancelled'])->default('pending');
             $table->decimal('subtotal', 10, 2);
