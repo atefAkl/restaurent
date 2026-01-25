@@ -90,6 +90,8 @@
     <!-- Products Table -->
     <div class="card">
         <div class="card-body">
+            <!-- Index Stats -->
+            <x-index-stats :items="$products" :route="'products.index'" />
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>

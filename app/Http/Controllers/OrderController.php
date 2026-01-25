@@ -12,16 +12,15 @@ use App\Http\Requests\UpdateOrderStatusRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $orders = Order::with(['user', 'orderItems.product'])
             ->latest()
             ->paginate(20);
-
-
 
         return view('orders.index', compact('orders'));
     }

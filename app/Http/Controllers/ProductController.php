@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UpdateProductRequest;
-use App\Http\Requests\ProductRequest;
+use App\Http\Requests\Products\UpdateRequest;
+use App\Http\Requests\Products\CreateRequest;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -14,12 +14,14 @@ use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $page_items = $request->pages ?? 20;
+
         $products = Product::with('category')
-            ->when(request('search'), function ($query) {
-                $query->where('name_ar', 'like', '%' . request('search') . '%')
-                    ->orWhere('name_en', 'like', '%' . request('search') . '%')
+            ->when($request->search, function ($query) use ($request) {
+                $query->where('name_ar', 'like', '%' . $request->search . '%')
+                    ->orWhere('name_en', 'like', '%' . $request->search . '%')
                     ->orWhere('barcode', 'like', '%' . request('search') . '%')
                     ->orWhere('sku', 'like', '%' . request('search') . '%');
             })
@@ -30,11 +32,16 @@ class ProductController extends Controller
                 $query->where('is_active', request('status') === '1');
             })
             ->orderBy('s_number', 'asc')
-            ->paginate(20);
+            ->paginate($page_items);
 
         $categories = Category::where('is_active', true)->get();
+        $variables = [
+            'page' => $request->page ?? 1,
+            'page_items' => $page_items,
+            'products' => Product::all()->count(),
+        ];
 
-        return view('products.index', compact('products', 'categories'));
+        return view('products.index', compact('products', 'categories', 'variables'));
     }
 
     public function create()
@@ -43,7 +50,7 @@ class ProductController extends Controller
         return view('products.create', compact('categories'));
     }
 
-    public function store(ProductRequest $request)
+    public function store(CreateRequest $request)
     {
         try {
             $data = $request->validated();
@@ -101,7 +108,7 @@ class ProductController extends Controller
         return view('products.edit', compact('product', 'categories'));
     }
 
-    public function update(UpdateProductRequest $request, Product $product)
+    public function update(UpdateRequest $request, Product $product)
     {
         //return $request->all();
         try {

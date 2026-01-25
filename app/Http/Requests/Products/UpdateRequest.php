@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Products;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ProductRequest extends FormRequest
+class UpdateRequest extends FormRequest
 {
     public function authorize()
     {
@@ -17,15 +17,8 @@ class ProductRequest extends FormRequest
             'name_ar'           => 'required|string|max:255',
             'name_en'           => 'nullable|string|max:255',
             'category_id'       => 'required|exists:categories,id',
-            's_number'          => 'nullable|unique:products,s_number,' . $this->id,
-            'price'             => 'required|numeric|min:0',
-            'cost'              => 'nullable|numeric|min:0',
             'description_ar'    => 'nullable|string',
             'description_en'    => 'nullable|string',
-            'barcode'           => 'nullable|string|max:255|unique:products,barcode,' . $this->product,
-            'sku'               => 'nullable|string|max:255|unique:products,sku,' . $this->product,
-            'min_stock_alert'   => 'nullable|integer|min:0',
-            'image'             => 'nullable|image|mimes:jpeg,jpg,png,gif|max:2048',
         ];
 
         return $rules;
