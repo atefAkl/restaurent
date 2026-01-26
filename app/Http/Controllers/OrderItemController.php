@@ -34,16 +34,22 @@ class OrderItemController extends Controller
             return redirect()->route('orders.create', ['order' => $orderId])->with('success', 'Item added to order successfully.');
         } catch (QueryException $e) {
             return redirect()->back()->with('error', 'Error adding item to order');
+        }
+    }
 
-            // Logic to add the product to the order
-            // This is a placeholder; actual implementation may vary
-            // For example, you might create a new OrderItem model instance here
-            // 'order_id' => request,
-            // 'product_id' => request,     
-            // 'unit_price' => $product->price,
-            // 'quantity' => 1,
-            // 'total_price' => $product->price  * quantity,
-            // Redirect back to the order creation page or wherever appropriate
+    public function update(Request $request, int $orderItem)
+    {
+        $orderItem = OrderItem::findOrFail($orderItem);
+        $item = $orderItem->product->price;
+
+        try {
+
+            $data['quantity'] = $request->input('quantity');
+            $data['total_price'] = $item * $request->input('quantity');
+            $orderItem->update($data);
+            return redirect()->back()->with('success', 'Item updated successfully.');
+        } catch (QueryException $e) {
+            return redirect()->back()->with('error', 'Error updating item to order');
         }
     }
 }

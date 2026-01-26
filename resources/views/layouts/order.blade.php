@@ -18,7 +18,7 @@
 
     {{-- Cairo font family --}}
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
-    
+
     <style>
         * {
             margin: 0;
@@ -43,27 +43,28 @@
 <body class="{{ request()->get('touch_mode', false) ? 'touch-mode' : '' }}">
     <div id="app">
         <!-- Navigation -->
-       
+
         <div class="container-fluid">
             <div class="row">
-                
+
 
                 <!-- Main Content -->
                 <main class="col-12 main-content">
+                    <!-- Hidden session messages for toast system -->
                     @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show fade-in" role="alert">
-                        <i class="bi bi-check-circle"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                    <div data-session-success="{{ session('success') }}"></div>
                     @endif
 
                     @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show fade-in" role="alert">
-                        <i class="bi bi-exclamation-circle"></i>
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                    <div data-session-error="{{ session('error') }}"></div>
+                    @endif
+
+                    @if(session('warning'))
+                    <div data-session-warning="{{ session('warning') }}"></div>
+                    @endif
+
+                    @if(session('info'))
+                    <div data-session-info="{{ session('info') }}"></div>
                     @endif
 
                     @yield('content')
@@ -80,6 +81,8 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <link rel="stylesheet" href="{{ asset('css/toast-styles.css') }}">
+    <script src="{{ asset('js/toast-system.js') }}"></script>
 
     <script>
         // Touch Mode Toggle
@@ -109,25 +112,14 @@
         }
 
         function showAlert(message, type = 'success') {
-            const alertHtml = `
-                <div class="alert alert-${type} alert-dismissible fade show fade-in" role="alert">
-                    <i class="bi bi-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-
-            const alertContainer = document.querySelector('.main-content');
-            alertContainer.insertAdjacentHTML('afterbegin', alertHtml);
+            // Use toast system instead of alerts
+            if (window.toastSystem) {
+                window.toastSystem.show(message, type, 5000);
+            } else {
+                // Fallback to console if toast system not loaded
+                console.log(`[${type.toUpperCase()}] ${message}`);
+            }
         }
-
-        // Auto-hide alerts after 5 seconds
-        setTimeout(() => {
-            document.querySelectorAll('.alert').forEach(alert => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            });
-        }, 5000);
     </script>
 
     @yield('scripts')

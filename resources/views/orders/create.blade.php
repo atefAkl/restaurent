@@ -19,30 +19,56 @@
         }
 
         .order-meals-item .card {
-            width: 130px; 
-            height: 100px; 
-            position:relative; 
+            width: 130px;
+            height: 100px;
+            position: relative;
             overflow: hidden;
         }
+
         .order-meals-item .card p.meal-price,
         .order-meals-item .card p.meal-name {
             display: block;
             position: absolute;
-            top: 0; 
-            color: #fff; 
-            height: 100%; 
-            width: 100%; 
+            top: 0;
+            color: #fff;
+            height: 100%;
+            width: 100%;
             font-weight: bold;
         }
+
         .order-meals-item .card p.meal-name {
-            background-color: #3d3e3dcc; 
+            background-color: #3d3e3dcc;
             text-align: center;
             padding: 1rem 0.5rem;
-        }          
+        }
+
         .order-meals-item .card p.meal-price {
             padding: 4rem 0.5rem;
-            text-align: end; 
-        }          
+            text-align: end;
+        }
+
+        .update-order-item-form input,
+        .update-order-item-form button,
+        .update-order-item-form select,
+        .update-order-item-form label {
+            height: 3rem;
+            text-align: center;
+            margin: 0;
+            font: normal 10px/1.2rem Cairo;
+            border-radius: 0.6rem
+        }
+
+        [dir=rtl] .update-order-item-form .input-group input:first-child,
+        [dir=rtl] .update-order-item-form .input-group label:first-child,
+        [dir=rtl] .update-order-item-form .input-group button:first-child {
+            border-radius: 0 0.6rem 0.6rem 0 !important;
+        }
+
+        [dir=rtl] .update-order-item-form .input-group input:last-child,
+        [dir=rtl] .update-order-item-form .input-group label:last-child,
+        [dir=rtl] .update-order-item-form .input-group button:last-child {
+            border-radius: 0.6rem 0 0 0.6rem !important;
+        }
     </style>
     {{-- Top Devisions --}}
     <div class="row">
@@ -63,12 +89,12 @@
                 @endforeach
                 <div class="border-bottom">
                     <a href="{{route('orders.index')}}" class="btn btn-block w-100 text-start text-white">
-                        {{  __('orders.back_to_orders') }}
+                        {{ __('orders.back_to_orders') }}
                     </a>
                 </div>
             </div>
         </div>
-        <div class="col-6 p-0">
+        <div class="col-10 col-md-5 p-0">
             <h4 class="bg-secondary text-white text-center py-2">{{__('orders.titles.products')}}</h4>
             <div class="d-flex p-3 justify-content-start flex-wrap">
                 {{-- Products --}}
@@ -80,19 +106,19 @@
                         <input type="hidden" name="order_id" value="{{ $order->id }}">
                         <input type="hidden" name="product_id" value="{{ $product->id }}">
                         <button type="submit" class="border-0 bg-transparent p-0 m-0 w-100 h-100">
-                        <div class="card" style="">
-                            @if ($product->image)
-                            <img role="logo" src="{{asset('storage/'.$product->image)}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
-                            @else
-                            <img role="icon" src="{{asset('storage/products/default.meal.icon.png')}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
-                            @endif
-                            <p class="meal-name" style="">
-                                {{$product->name}}
-                            </p>
+                            <div class="card" style="">
+                                @if ($product->image)
+                                <img role="logo" src="{{asset('storage/'.$product->image)}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
+                                @else
+                                <img role="icon" src="{{asset('storage/products/default.meal.icon.png')}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
+                                @endif
+                                <p class="meal-name" style="">
+                                    {{$product->name}}
+                                </p>
 
-                            <p class="meal-price">{{$product->price}}</p>
+                                <p class="meal-price">{{$product->price}}</p>
 
-                        </div>
+                            </div>
                         </button>
                     </form>
                 </div>
@@ -100,23 +126,37 @@
                 {{-- <div class="order-meals-item p-1">
                     <div class="card " style="">
                         <a href="{{route('products.create', ['category_id' => $active_category])}}" class="w-100 h-100 d-flex flex-column justify-content-center align-items-center" style="background-color: #333c; color: #fff; text-decoration: none;">
-                        <h1 class="text-center text-xl p-0 m-0">+</h1>
-                        <h3 class="text-center p-0 m-0">Add</h3>
-                        </a>
-                    </div>
-                </div> --}}
+                <h1 class="text-center text-xl p-0 m-0">+</h1>
+                <h3 class="text-center p-0 m-0">Add</h3>
+                </a>
             </div>
-        </div>
-        <div class="col-4 p-0">
-            <h4 class="bg-secondary text-white text-center py-2">{{__('orders.titles.order_items')}}</h4>
-            <form action="{{route('orders.items.store')}}" method="POST">
-                @csrf
-                <input type="hidden" name="order_id" value="{{ $order->id }}">
-
-            </form>
-        </div>
+        </div> --}}
     </div>
-    {{-- Categories --}}
+</div>
+<div class="col-sm-12 col-md-5 p-0">
+    <h4 class="bg-secondary text-white text-center py-2">{{ __('orders.titles.order_items') }}</h4>
+    @csrf
+    @forelse( $orderItems as $item )
+    <form class="update-order-item-form" method="POST" action="{{route('orders.items.update', $item->id)}}">
+        @csrf
+        @method('PUT')
+        <div class="input-group mb-1">
+            <label for="" class="input-group-text px-3">{{$loop->iteration}}</label>
+            <input type="text" class="form-control" name="product_name" value="{{$item->product->name}}" id="item_name_{{$item->id}}">
+            <input type="number" class="input-group-text" style="width: 80px;" name="unit_price" value="{{$item->unit_price}}" id="item_unit_price_{{$item->id}}">
+            <input type="number" class="input-group-text" style="width: 50px;" name="quantity" value="{{$item->quantity}}" id="item_quantity_{{$item->id}}">
+            <input type="number" class="input-group-text" style="width: 110px;" name="total_price" value="{{$item->total_price}}" id="item_total_price_{{$item->id}}">
+            <button type="submit" class="input-group-text btn btn-secondary"><i class="bi bi-send"></i></button>
+            <button type="button" class="input-group-text btn btn-danger"><i class="bi bi-trash"></i></button>
+        </div>
+    </form>
+    @empty
+    No items added yest, please add some items
+    @endforelse
+
+</div>
+</div>
+{{-- Categories --}}
 </div>
 
 <!-- Page Header with Background -->
@@ -125,7 +165,7 @@
     <form method="POST" action="{{ route('orders.store') }}" id="orderForm">
         @csrf
         <div class="row">
-           
+
             {{-- <div class="col-md-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header py-2 d-flex justify-content-between align-items-center">
@@ -143,43 +183,43 @@
                             <label for="customer_name" class="form-label fw-bold text-dark">اسم العميل</label>
                             <input type="text" class="form-control" id="customer_name" name="customer_name"
                                 value="{{ old('customer_name') }}" required>
-                            @error('customer_name')
-                            <div class="text-danger small mt-2">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="customer_phone" class="form-label fw-bold text-dark">رقم الهاتف</label>
-                            <input type="tel" class="form-control" id="customer_phone" name="customer_phone"
-                                value="{{ old('customer_phone') }}">
-                            @error('customer_phone')
-                            <div class="text-danger small mt-2">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="customer_address" class="form-label fw-bold text-dark">العنوان</label>
-                            <textarea class="form-control" id="customer_address" name="customer_address" rows="2">{{ old('customer_address') }}</textarea>
-                            @error('customer_address')
-                            <div class="text-danger small mt-2">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="order_type" class="form-label fw-bold text-dark">نوع الطلب</label>
-                            <select class="form-select" id="order_type" name="order_type" required>
-                                <option value="">اختر نوع الطلب</option>
-                                <option value="dine_in" {{ old('order_type') == 'dine_in' ? 'selected' : '' }}>جلسة في المطعم</option>
-                                <option value="takeaway" {{ old('order_type') == 'takeaway' ? 'selected' : '' }}>توصيل</option>
-                                <option value="delivery" {{ old('order_type') == 'delivery' ? 'selected' : '' }}>خدمة توصيل</option>
-                            </select>
-                            @error('order_type')
-                            <div class="text-danger small mt-2">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-            </div> --}}
+            @error('customer_name')
+            <div class="text-danger small mt-2">{{ $message }}</div>
+            @enderror
+        </div>
+        <div class="mb-3">
+            <label for="customer_phone" class="form-label fw-bold text-dark">رقم الهاتف</label>
+            <input type="tel" class="form-control" id="customer_phone" name="customer_phone"
+                value="{{ old('customer_phone') }}">
+            @error('customer_phone')
+            <div class="text-danger small mt-2">{{ $message }}</div>
+            @enderror
+        </div>
+        <div class="mb-3">
+            <label for="customer_address" class="form-label fw-bold text-dark">العنوان</label>
+            <textarea class="form-control" id="customer_address" name="customer_address" rows="2">{{ old('customer_address') }}</textarea>
+            @error('customer_address')
+            <div class="text-danger small mt-2">{{ $message }}</div>
+            @enderror
+        </div>
+        <div class="mb-3">
+            <label for="order_type" class="form-label fw-bold text-dark">نوع الطلب</label>
+            <select class="form-select" id="order_type" name="order_type" required>
+                <option value="">اختر نوع الطلب</option>
+                <option value="dine_in" {{ old('order_type') == 'dine_in' ? 'selected' : '' }}>جلسة في المطعم</option>
+                <option value="takeaway" {{ old('order_type') == 'takeaway' ? 'selected' : '' }}>توصيل</option>
+                <option value="delivery" {{ old('order_type') == 'delivery' ? 'selected' : '' }}>خدمة توصيل</option>
+            </select>
+            @error('order_type')
+            <div class="text-danger small mt-2">{{ $message }}</div>
+            @enderror
+        </div>
+</div>
+</div>
+</div> --}}
 
-            <!-- Order Items -->
-            {{-- <div class="col-md-8">
+<!-- Order Items -->
+{{-- <div class="col-md-8">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header py-2 d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
@@ -211,116 +251,116 @@
                                                 <option value="">اختر منتج</option>
                                                 @foreach($products as $product)
                                                 <option value="{{ $product->id }}"
-                                                    data-price="{{ $product->price }}"
-                                                    data-name="{{ $product->name_ar }}"
-                                                    data-barcode="{{ $product->barcode ?? '' }}"
-                                                    data-sku="{{ $product->sku ?? '' }}">
-                                                    {{ $product->name_ar }}
-                                                    @if($product->barcode)
-                                                    ({{ $product->barcode }})
-                                                    @endif
-                                                </option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control item-price" name="prices[]"
-                                                readonly step="0.01" min="0">
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control item-quantity" name="quantities[]"
-                                                min="1" value="1" onchange="updateItemTotal(this)">
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control item-total" name="totals[]"
-                                                readonly step="0.01" min="0">
-                                        </td>
-                                        <td>
-                                            <div class="input-group mb-2">
-                                                <input type="text" class="form-control form-control-sm"
-                                                    id="barcode_{{ time() }}"
-                                                    placeholder="باركود أو SKU"
-                                                    onkeyup="searchByBarcode(this)">
-                                                <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                    onclick="document.getElementById('barcode_{{ time() }}').focus()">
-                                                    <i class="bi bi-upc-scan"></i>
-                                                </button>
-                                            </div>
-                                            <button type="button" class="btn btn-sm btn-danger" onclick="removeOrderItem(this)">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+data-price="{{ $product->price }}"
+data-name="{{ $product->name_ar }}"
+data-barcode="{{ $product->barcode ?? '' }}"
+data-sku="{{ $product->sku ?? '' }}">
+{{ $product->name_ar }}
+@if($product->barcode)
+({{ $product->barcode }})
+@endif
+</option>
+@endforeach
+</select>
+</td>
+<td>
+    <input type="number" class="form-control item-price" name="prices[]"
+        readonly step="0.01" min="0">
+</td>
+<td>
+    <input type="number" class="form-control item-quantity" name="quantities[]"
+        min="1" value="1" onchange="updateItemTotal(this)">
+</td>
+<td>
+    <input type="number" class="form-control item-total" name="totals[]"
+        readonly step="0.01" min="0">
+</td>
+<td>
+    <div class="input-group mb-2">
+        <input type="text" class="form-control form-control-sm"
+            id="barcode_{{ time() }}"
+            placeholder="باركود أو SKU"
+            onkeyup="searchByBarcode(this)">
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+            onclick="document.getElementById('barcode_{{ time() }}').focus()">
+            <i class="bi bi-upc-scan"></i>
+        </button>
+    </div>
+    <button type="button" class="btn btn-sm btn-danger" onclick="removeOrderItem(this)">
+        <i class="bi bi-trash"></i>
+    </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 
-                        
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="notes" class="form-label fw-bold text-dark">ملاحظات الطلب</label>
-                                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
-                                    @error('notes')
-                                    <div class="text-danger small mt-2">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light border-0">
-                                    <div class="card-body">
-                                        <h5 class="card-title fw-bold text-dark">ملخص الطلب</h5>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-dark">المجموع الفرعي:</span>
-                                            <span id="subtotal" class="fw-bold text-primary">0.00 ريال</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-dark">الضريبة (15%):</span>
-                                            <span id="tax" class="fw-bold text-primary">0.00 ريال</span>
-                                        </div>
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-dark">التوصيل:</span>
-                                            <input type="number" class="form-control form-control-sm d-inline-block"
-                                                id="delivery_fee" name="delivery_fee"
-                                                value="{{ old('delivery_fee', 0) }}" step="0.01" min="0"
-                                                style="width: 100px;" onchange="updateOrderTotal()">
-                                        </div>
-                                        <hr class="my-3">
-                                        <div class="d-flex justify-content-between">
-                                            <strong class="text-dark fs-5">الإجمالي:</strong>
-                                            <strong id="total" class="text-success fs-4">0.00 ريال</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> --}}
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="notes" class="form-label fw-bold text-dark">ملاحظات الطلب</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
+            @error('notes')
+            <div class="text-danger small mt-2">{{ $message }}</div>
+            @enderror
         </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-light border-0">
+            <div class="card-body">
+                <h5 class="card-title fw-bold text-dark">ملخص الطلب</h5>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-dark">المجموع الفرعي:</span>
+                    <span id="subtotal" class="fw-bold text-primary">0.00 ريال</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-dark">الضريبة (15%):</span>
+                    <span id="tax" class="fw-bold text-primary">0.00 ريال</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-dark">التوصيل:</span>
+                    <input type="number" class="form-control form-control-sm d-inline-block"
+                        id="delivery_fee" name="delivery_fee"
+                        value="{{ old('delivery_fee', 0) }}" step="0.01" min="0"
+                        style="width: 100px;" onchange="updateOrderTotal()">
+                </div>
+                <hr class="my-3">
+                <div class="d-flex justify-content-between">
+                    <strong class="text-dark fs-5">الإجمالي:</strong>
+                    <strong id="total" class="text-success fs-4">0.00 ريال</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+</div> --}}
+</div>
 
-        <!-- Submit Buttons -->
-        {{-- <div class="row mt-4">
+<!-- Submit Buttons -->
+{{-- <div class="row mt-4">
             <div class="col-12">
                 <div class="d-flex justify-content-between">
                     <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x"></i>
-                        إلغاء
-                    </a>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-warning" onclick="saveAsDraft()">
-                            <i class="bi bi-save"></i>
-                            حفظ كمسودة
-                        </button>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check"></i>
-                            إنشاء الطلب
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div> --}}
-    </form>
+<i class="bi bi-x"></i>
+إلغاء
+</a>
+<div class="btn-group">
+    <button type="button" class="btn btn-warning" onclick="saveAsDraft()">
+        <i class="bi bi-save"></i>
+        حفظ كمسودة
+    </button>
+    <button type="submit" class="btn btn-success">
+        <i class="bi bi-check"></i>
+        إنشاء الطلب
+    </button>
+</div>
+</div>
+</div>
+</div> --}}
+</form>
 </div>
 @endsection
 

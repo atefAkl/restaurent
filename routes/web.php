@@ -35,6 +35,8 @@ Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])-
 Route::get('/orders/{order}/print', [OrderController::class, 'print'])->name('orders.print')->middleware('auth');
 Route::get('/orders/kitchen', [OrderController::class, 'kitchenOrders'])->name('orders.kitchen')->middleware('auth');
 Route::post('/orders/items/store', [OrderItemController::class, 'store'])->name('orders.items.store')->middleware('auth');
+Route::put('/orders/items/{item}/update', [OrderItemController::class, 'update'])->name('orders.items.update')->middleware('auth');
+Route::delete('/orders/items/{item}/destroy', [OrderItemController::class, 'destroy'])->name('orders.items.destroy')->middleware('auth');
 
 // Products Routes
 Route::group(['middleware' => 'auth'], function () {

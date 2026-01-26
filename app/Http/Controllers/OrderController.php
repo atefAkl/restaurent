@@ -47,7 +47,8 @@ class OrderController extends Controller
                 'is_active' => true,
             ]);
         }
-        return view('orders.create', compact('categories', 'products', 'order', 'active_category'));
+        $orderItems = $order->orderItems;
+        return view('orders.create', compact('categories', 'products', 'order', 'active_category', 'orderItems'));
     }
 
     public function store(OrderRequest $request)
