@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Coupon;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\UpdateOrderStatusRequest;
+use App\Models\Client;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -48,7 +49,8 @@ class OrderController extends Controller
             ]);
         }
         $orderItems = $order->orderItems;
-        return view('orders.create', compact('categories', 'products', 'order', 'active_category', 'orderItems'));
+        $clients = Client::where('status', true)->get();
+        return view('orders.create', compact('categories', 'products', 'order', 'active_category', 'orderItems', 'clients'));
     }
 
     public function store(OrderRequest $request)

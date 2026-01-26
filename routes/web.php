@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ReportController;
@@ -36,8 +37,10 @@ Route::get('/orders/{order}/print', [OrderController::class, 'print'])->name('or
 Route::get('/orders/kitchen', [OrderController::class, 'kitchenOrders'])->name('orders.kitchen')->middleware('auth');
 Route::post('/orders/items/store', [OrderItemController::class, 'store'])->name('orders.items.store')->middleware('auth');
 Route::put('/orders/items/{item}/update', [OrderItemController::class, 'update'])->name('orders.items.update')->middleware('auth');
-Route::delete('/orders/items/{item}/destroy', [OrderItemController::class, 'destroy'])->name('orders.items.destroy')->middleware('auth');
+Route::get('/orders/items/{item}/destroy', [OrderItemController::class, 'destroy'])->name('orders.items.destroy')->middleware('auth');
 
+// Clients Routes
+Route::resource('clients', ClientController::class)->middleware('auth');
 // Products Routes
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');

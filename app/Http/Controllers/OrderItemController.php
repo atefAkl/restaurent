@@ -52,4 +52,16 @@ class OrderItemController extends Controller
             return redirect()->back()->with('error', 'Error updating item to order');
         }
     }
+
+    public function destroy(Request $request, int $orderItem)
+    {
+        $orderItem = OrderItem::findOrFail($orderItem);
+
+        try {
+            $orderItem->delete();
+            return redirect()->back()->with('success', 'Item removed from order successfully.');
+        } catch (QueryException $e) {
+            return redirect()->back()->with('error', 'Error removing item from order');
+        }
+    }
 }

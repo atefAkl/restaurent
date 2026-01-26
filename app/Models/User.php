@@ -104,4 +104,9 @@ class User extends Authenticatable
     {
         return in_array($this->role, ['admin', 'accountant']);
     }
+
+    public function canManageClients()
+    {
+        return in_array($this->role, ['admin', 'seller']);
+    }
 }
