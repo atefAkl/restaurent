@@ -17,50 +17,98 @@
         .text-sm {
             font-size: 0.875rem !important;
         }
+
+        .order-meals-item .card {
+            width: 130px; 
+            height: 100px; 
+            position:relative; 
+            overflow: hidden;
+        }
+        .order-meals-item .card p.meal-price,
+        .order-meals-item .card p.meal-name {
+            display: block;
+            position: absolute;
+            top: 0; 
+            color: #fff; 
+            height: 100%; 
+            width: 100%; 
+            font-weight: bold;
+        }
+        .order-meals-item .card p.meal-name {
+            background-color: #3d3e3dcc; 
+            text-align: center;
+            padding: 1rem 0.5rem;
+        }          
+        .order-meals-item .card p.meal-price {
+            padding: 4rem 0.5rem;
+            text-align: end; 
+        }          
     </style>
     {{-- Top Devisions --}}
     <div class="row">
         <div class="col-2 p-0">
-            <h4 class="bg-secondary text-white text-center py-2">Categories</h4>
-            <div>
-                <div class="p-2 border-bottom text-white">
-                    <button href="" class="btn btn-link btn-block text-white w-100 text-start text-decoration-none">
-                        All
-                    </button>
+            <h4 class="bg-secondary text-white text-center py-2">{{__('orders.titles.categories')}}</h4>
+            <div id="order_cats" style="background-color: #3d3e3dcc">
+                <div class="border-bottom {{$active_category == '' ? 'active' : ''}}">
+                    <a href="?active_category=" class="btn btn-block w-100 text-start text-white">
+                        {{__('orders.all_categories')}}
+                    </a>
                 </div>
                 @foreach($categories as $category)
-                <div class="border-bottom text-white">
-                    <button href="" class="btn btn-link btn-block w-100 text-start text-decoration-none">
-                        {{ $category->name }} {{$active_category->id == $category->id ? '(Active)' : ''}}
-                    </button>
+                <div class="border-bottom {{$active_category == $category->id ? 'active' : ''}}">
+                    <a href="?active_category={{ $category->id }}" class="btn btn-block w-100 text-start text-white">
+                        {{ $category->name }} {{$active_category == $category->id ? '(Active)' : ''}}
+                    </a>
                 </div>
                 @endforeach
+                <div class="border-bottom">
+                    <a href="{{route('orders.index')}}" class="btn btn-block w-100 text-start text-white">
+                        {{  __('orders.back_to_orders') }}
+                    </a>
+                </div>
             </div>
         </div>
         <div class="col-6 p-0">
-            <h4 class="bg-secondary text-white text-center py-2">Products</h4>
-            <div class="d-flex p-3 justify-content-start">
+            <h4 class="bg-secondary text-white text-center py-2">{{__('orders.titles.products')}}</h4>
+            <div class="d-flex p-3 justify-content-start flex-wrap">
+                {{-- Products --}}
+                {{-- Loop through products --}}
                 @foreach($products as $product)
-                <div class="p-1">
-                    <div class="card " style="width: 200px; height: 130px; position:relative; overflow: hidden;">
-                        @if ($product->image)
-                        <img role="logo" src="{{asset('storage/'.$product->image)}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
-                        @else
-                        <img role="icon" src="{{asset('storage/products/default.meal.icon.png')}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
-                        @endif
-                        <p class="position-absolute" style="display: block; line-height: 130px; text-align: center; top: 0; color: #fff; height: 100%; background-color: #3d3e3dcc; width: 100%; font-weight: bold;">
-                            {{$product->name}}
-                        </p>
+                <div class="order-meals-item p-1">
+                    <form method="POST" action="{{route('orders.items.store')}}" class="text-decoration-none">
+                        @csrf
+                        <input type="hidden" name="order_id" value="{{ $order->id }}">
+                        <input type="hidden" name="product_id" value="{{ $product->id }}">
+                        <button type="submit" class="border-0 bg-transparent p-0 m-0 w-100 h-100">
+                        <div class="card" style="">
+                            @if ($product->image)
+                            <img role="logo" src="{{asset('storage/'.$product->image)}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
+                            @else
+                            <img role="icon" src="{{asset('storage/products/default.meal.icon.png')}}" class="p-1 card-img-top" alt="{{$product->description_ar}}">
+                            @endif
+                            <p class="meal-name" style="">
+                                {{$product->name}}
+                            </p>
 
-                        <p class="position-absolute bottom-0 end-0 p-2 text-light fw-bold">{{$product->price}}</p>
+                            <p class="meal-price">{{$product->price}}</p>
 
-                    </div>
+                        </div>
+                        </button>
+                    </form>
                 </div>
                 @endforeach
+                {{-- <div class="order-meals-item p-1">
+                    <div class="card " style="">
+                        <a href="{{route('products.create', ['category_id' => $active_category])}}" class="w-100 h-100 d-flex flex-column justify-content-center align-items-center" style="background-color: #333c; color: #fff; text-decoration: none;">
+                        <h1 class="text-center text-xl p-0 m-0">+</h1>
+                        <h3 class="text-center p-0 m-0">Add</h3>
+                        </a>
+                    </div>
+                </div> --}}
             </div>
         </div>
         <div class="col-4 p-0">
-            <h4 class="bg-secondary text-white text-center py-2">Order Items</h4>
+            <h4 class="bg-secondary text-white text-center py-2">{{__('orders.titles.order_items')}}</h4>
             <form action="{{route('orders.items.store')}}" method="POST">
                 @csrf
                 <input type="hidden" name="order_id" value="{{ $order->id }}">
@@ -77,8 +125,8 @@
     <form method="POST" action="{{ route('orders.store') }}" id="orderForm">
         @csrf
         <div class="row">
-            <!-- Customer Information -->
-            <div class="col-md-4">
+           
+            {{-- <div class="col-md-4">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header py-2 d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
@@ -128,10 +176,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Order Items -->
-            <div class="col-md-8">
+            {{-- <div class="col-md-8">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header py-2 d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
@@ -144,7 +192,7 @@
                         </button>
                     </div>
                     <div class="card-body">
-                        <!-- Order Items Table -->
+                        
                         <div class="table-responsive">
                             <table class="table table-bordered" id="orderItemsTable">
                                 <thead>
@@ -207,7 +255,7 @@
                             </table>
                         </div>
 
-                        <!-- Order Summary -->
+                        
                         <div class="row mt-4">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -248,11 +296,11 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> --}}
         </div>
 
         <!-- Submit Buttons -->
-        <div class="row mt-4">
+        {{-- <div class="row mt-4">
             <div class="col-12">
                 <div class="d-flex justify-content-between">
                     <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
@@ -271,7 +319,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </form>
 </div>
 @endsection

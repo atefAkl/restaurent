@@ -56,7 +56,11 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "laravel/telescope",
+                "laravel/tinker",
+                "laravel/framework"
+            ]
         }
     },
     "config": {

@@ -44,6 +44,13 @@ class ProductController extends Controller
         return view('products.index', compact('products', 'categories', 'variables'));
     }
 
+    public function copy($productId)
+    {
+        $product = Product::findOrFail($productId);
+        $categories = Category::where('is_active', true)->get();
+        return view('products.copy', compact('product', 'categories'));
+    }
+
     public function create()
     {
         $categories = Category::where('is_active', true)->get();

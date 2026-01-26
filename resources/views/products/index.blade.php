@@ -179,6 +179,10 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    <a href="{{ route('products.copy', [$product->id]) }}"
+                                        class="btn btn-sm btn-outline-warning" title="تعديل">
+                                        <i class="bi bi-copy"></i>
+                                    </a>
                                 </div>
                             </td>
                         </tr>

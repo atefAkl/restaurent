@@ -25,13 +25,15 @@ class OrderController extends Controller
         return view('orders.index', compact('orders'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $categories = Category::with('activeProducts')->get();
-        $products = Product::where('is_active', true)->get();
+        $active_category = $request->active_category ?? '';
+        $filter = $active_category != '' ? ['is_active' => true, 'category_id' => $active_category] : ['is_active' => true];
+        $products = Product::where($filter)->get();
+
         $order = Order::where(['is_active' => true, 'status' => 'in_progress', 'user_id' => Auth::id()])->latest()->first();
         if (!$order) {
-
             $order = Order::create([
                 'order_number' => 'TEMP-' . time() . '-' . Auth::id(),
                 'user_id' => Auth::id(),
@@ -45,7 +47,6 @@ class OrderController extends Controller
                 'is_active' => true,
             ]);
         }
-        $active_category = $categories->first();
         return view('orders.create', compact('categories', 'products', 'order', 'active_category'));
     }
 

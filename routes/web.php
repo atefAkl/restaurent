@@ -34,13 +34,14 @@ Route::resource('orders', OrderController::class)->middleware('auth');
 Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus')->middleware('auth');
 Route::get('/orders/{order}/print', [OrderController::class, 'print'])->name('orders.print')->middleware('auth');
 Route::get('/orders/kitchen', [OrderController::class, 'kitchenOrders'])->name('orders.kitchen')->middleware('auth');
-Route::get('/orders/items', [OrderItemController::class, 'store'])->name('orders.items.store')->middleware('auth');
+Route::post('/orders/items/store', [OrderItemController::class, 'store'])->name('orders.items.store')->middleware('auth');
 
 // Products Routes
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
     Route::get('/products/{product}/show', [ProductController::class, 'show'])->name('products.show');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+    Route::get('/products/{product}/copy', [ProductController::class, 'copy'])->name('products.copy');
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::post('/products/store', [ProductController::class, 'store'])->name('products.store');
     Route::put('/products/{product}/update', [ProductController::class, 'update'])->name('products.update');
