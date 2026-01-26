@@ -36,14 +36,15 @@ class ClientController extends Controller
     public function store(Request $request)
     {
 
-        $request->validate([
+
+        $validated = $request->validate([
             'name' => 'required|string|max:50|unique:clients,name',
             'type' => 'required|in:dine_in,takeaway,delivery,catering',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:100',
-            's_number' => 'nullable|string|max:14|unique:clients,s_number',
-            'status' => 'sometimes|boolean',
+            's_number' => 'nullable|string|max:14|unique:clients,s_number'
         ]);
+
         try {
             $data = $request->only(['name', 'type', 'phone', 'email', 's_number', 'status']);
             $data['status'] = $request->has('status') ? true : false;
@@ -82,11 +83,31 @@ class ClientController extends Controller
     }
 
     /**
+     * Update the specified resource in storage.
+     */
+    public function searchByNameOrPhone(Request $request)
+    {
+        $search = $request->search;
+
+        $clients = Client::select('name', 'phone', 'id')
+            ->where('name', 'like', '%' . $search . '%')
+            ->orWhere('phone', 'like', '%' . $search . '%')
+            ->where('status', true)
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'clients' => $clients
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(Client $client)
     {
-       
+
         try {
             $client->delete();
 
@@ -95,7 +116,7 @@ class ClientController extends Controller
                 'message' => 'تم حذف الطلب بنجاح'
             ]);
         } catch (Exception $e) {
-           
+
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ أثناء حذف الطلب'

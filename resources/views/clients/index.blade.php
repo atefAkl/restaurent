@@ -20,7 +20,7 @@
                 <div class="col-md-3">
                     <input type="text" name="search" class="form-control" placeholder="رقم الطلب أو اسم العميل" value="{{ request('search') }}">
                 </div>
-                
+
                 <div class="col-md-2">
                     <select name="type" class="form-select">
                         <option value="">جميع الأنواع</option>
@@ -40,7 +40,7 @@
                     <a href="{{ route('clients.index') }}" class="btn btn-outline-secondary">
                         <i class="bi bi-x-circle"></i>
                     </a>
-                    
+
                 </div>
             </div>
         </form>
@@ -70,21 +70,25 @@
                         <td>
                             <strong>{{ $item->name }}</strong>
                         </td>
-                        
+
                         <td>
                             {{ $item->type }}
                         </td>
+
                         <td>
                             {{ $item->phone }}
                         </td>
+
                         <td>
                             {{ $item->email }}
                         </td>
+
                         <td>
                             {{ $item->status }}
                         </td>
+
                         <td>
-                            
+
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ route('clients.show', $item) }}" class="btn btn-primary" title="عرض">
                                     <i class="bi bi-eye"></i>
@@ -94,15 +98,15 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 @endif
-                                <button onclick="printClient({{ $item->id }})" class="btn btn-success" title="طباعة">
+                                <button data-id="{{ $item->id }}" onclick="printClient(this.dataset.id)" class="btn btn-success" title="طباعة">
                                     <i class="bi bi-printer"></i>
                                 </button>
                                 @if(Auth::user()->canManageClients())
-                                <button onclick="deleteClient({{ $item->id }})" class="btn btn-danger" title="حذف">
+                                <button data-id="{{ $item->id }}" onclick="deleteClient(this.dataset.id)" class="btn btn-danger" title="حذف">
                                     <i class="bi bi-trash"></i>
                                 </button>
                                 @endif
-                                
+
                             </div>
                         </td>
                     </tr>
@@ -120,7 +124,7 @@
 
         <!-- Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-3">
-            
+
             {{ $clients->links() }}
         </div>
     </div>

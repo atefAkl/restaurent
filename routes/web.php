@@ -41,6 +41,7 @@ Route::get('/orders/items/{item}/destroy', [OrderItemController::class, 'destroy
 
 // Clients Routes
 Route::resource('clients', ClientController::class)->middleware('auth');
+Route::get('/clients/search/by/name/or/phone', [ClientController::class, 'searchByNameOrPhone'])->name('clients.searchByNameOrPhone')->middleware('auth');
 // Products Routes
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
