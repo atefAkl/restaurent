@@ -8,6 +8,7 @@ return [
       'edit_order' => 'Edit Order',
       'order_details' => 'Order Details',
       'order_summary' => 'Order Summary',
+    'client_information' => 'Client Information',
     ],
     'welcome' => 'Welcome to our application!',
     'login' => 'Login',

@@ -150,25 +150,35 @@ class OrderController extends Controller
     public function update(Request $request, Order $order)
     {
         if ($order->status === 'completed' || $order->status === 'cancelled') {
-            return response()->json([
-                'success' => false,
-                'message' => 'لا يمكن تعديل طلب مكتمل أو ملغي'
-            ], 400);
+            return redirect()->back()->with('error', 'لا يمكن تعديل طلب مكتمل أو ملغي');
         }
 
         $request->validate([
+            'customer_id' => 'nullable|exists:clients,id',
             'customer_name' => 'nullable|string|max:255',
             'customer_phone' => 'nullable|string|max:20',
+            'customer_address' => 'nullable|string|max:500',
+            'room_number' => 'nullable|string|max:50',
             'type' => 'required|in:dine_in,takeaway,delivery,catering',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'payment_method' => 'required|in:cash,visa,mixed',
+            'items' => 'required|json',
+            'payment_method' => 'required|in:cash,card,bank_transfer,mixed',
+            'payment_reference' => 'nullable|string|max:100',
+            'discount_amount' => 'nullable|numeric|min:0',
+            'subtotal' => 'required|numeric|min:0',
+            'tax_amount' => 'required|numeric|min:0',
+            'total_amount' => 'required|numeric|min:0',
             'notes' => 'nullable|string'
         ]);
 
         try {
             DB::beginTransaction();
+
+            // Parse items from JSON
+            $items = json_decode($request->items, true);
+
+            if (!is_array($items) || count($items) === 0) {
+                throw new Exception('يجب إضافة منتج واحد على الأقل للطلب');
+            }
 
             // Restore stock for old items
             foreach ($order->orderItems as $item) {
@@ -181,9 +191,8 @@ class OrderController extends Controller
             // Delete old items
             $order->orderItems()->delete();
 
-            // Add new items
-            $subtotal = 0;
-            foreach ($request->items as $item) {
+            // Add new items and update stock
+            foreach ($items as $item) {
                 $product = Product::findOrFail($item['product_id']);
 
                 // Check stock
@@ -191,40 +200,46 @@ class OrderController extends Controller
                     throw new Exception("المنتج '{$product->name_ar}' غير متوفر بالكمية المطلوبة");
                 }
 
-                $orderItem = new OrderItem();
-                $orderItem->order_id = $order->id;
-                $orderItem->product_id = $item['product_id'];
-                $orderItem->quantity = $item['quantity'];
-                $orderItem->notes = $item['notes'] ?? null;
-                $orderItem->save();
+                // Create order item
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total_price' => $item['price'] * $item['quantity'],
+                ]);
 
-                $subtotal += $orderItem->total_price;
+                // Update stock
+                if ($product->track_inventory) {
+                    $product->stock_quantity -= $item['quantity'];
+                    $product->save();
+                }
             }
 
             // Update Order
-            $order->customer_name = $request->customer_name;
-            $order->customer_phone = $request->customer_phone;
-            $order->type = $request->type;
-            $order->payment_method = $request->payment_method;
-            $order->notes = $request->notes;
-            $order->subtotal = $subtotal;
-            $order->tax_amount = $subtotal * 0.15;
-            $order->total_amount = $order->subtotal + $order->tax_amount - $order->discount_amount;
-            $order->save();
+            $order->update([
+                'customer_id' => $request->customer_id,
+                'customer_name' => $request->customer_name,
+                'customer_phone' => $request->customer_phone,
+                'customer_address' => $request->customer_address,
+                'room_number' => $request->room_number,
+                'type' => $request->type,
+                'payment_method' => $request->payment_method,
+                'payment_reference' => $request->payment_reference,
+                'subtotal' => $request->subtotal,
+                'tax_amount' => $request->tax_amount,
+                'discount_amount' => $request->discount_amount ?? 0,
+                'total_amount' => $request->total_amount,
+                'remaining_amount' => $request->total_amount - ($order->paid_amount ?? 0),
+                'notes' => $request->notes,
+            ]);
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'order' => $order->load('orderItems.product'),
-                'message' => 'تم تحديث الطلب بنجاح'
-            ]);
+            return redirect()->route('orders.index')->with('success', 'تم تحديث الطلب بنجاح');
         } catch (Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 400);
+            return redirect()->back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
         }
     }
 

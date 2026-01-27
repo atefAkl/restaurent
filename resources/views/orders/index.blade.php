@@ -1,208 +1,60 @@
 @extends('layouts.app')
+@section('title', 'الطلبات')
 
 @section('content')
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">الطلبات</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        @if(Auth::user()->canManageOrders())
-        <a href="{{ route('orders.create') }}" class="btn btn-primary">
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-white px-3 py-2 rounded" style="font-size:13px;">
+            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">لوحة التحكم</a></li>
+            <li class="breadcrumb-item active">الطلبات</li>
+        </ol>
+    </nav>
+    <!-- Header & Add Button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold mb-0" style="font-size:1.6rem;">الطلبات</h2>
+        <a href="{{ route('orders.create') }}" class="btn btn-primary d-flex align-items-center" style="font-size:15px;gap:4px;">
             <i class="bi bi-plus-circle"></i> طلب جديد
         </a>
-        @endif
     </div>
-</div>
-
-<!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ route('orders.index') }}">
-            <div class="row">
-                <div class="col-md-3">
-                    <input type="text" name="search" class="form-control" placeholder="رقم الطلب أو اسم العميل" value="{{ request('search') }}">
-                </div>
-                <div class="col-md-2">
-                    <select name="status" class="form-select">
-                        <option value="">جميع الحالات</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
-                        <option value="preparing" {{ request('status') == 'preparing' ? 'selected' : '' }}>قيد التحضير</option>
-                        <option value="ready" {{ request('status') == 'ready' ? 'selected' : '' }}>جاهز</option>
-                        <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select name="type" class="form-select">
-                        <option value="">جميع الأنواع</option>
-                        <option value="dine_in" {{ request('type') == 'dine_in' ? 'selected' : '' }}>في المطعم</option>
-                        <option value="takeaway" {{ request('type') == 'takeaway' ? 'selected' : '' }}>توصيل</option>
-                        <option value="delivery" {{ request('type') == 'delivery' ? 'selected' : '' }}>توصيل</option>
-                        <option value="catering" {{ request('type') == 'catering' ? 'selected' : '' }}>تجهيز وليمة</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <input type="date" name="date" class="form-control" value="{{ request('date') }}">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-outline-primary">
-                        <i class="bi bi-search"></i> بحث
-                    </button>
-                    <a href="{{ route('orders.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x-circle"></i>
-                    </a>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Orders Table -->
-<div class="card">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
+    <!-- Table Box -->
+    <div class="card shadow-sm" style="border-radius:10px;">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0" style="font-size:14px;">
+                <thead class="table-light">
                     <tr>
-                        <th>رقم الطلب</th>
-                        <th>التاريخ</th>
-                        <th>العميل</th>
-                        <th>النوع</th>
-                        <th>الإجمالي</th>
+                        <th style="min-width:90px;">الإجراءات</th>
                         <th>الحالة</th>
-                        <th>الموظف</th>
-                        <th>إجراءات</th>
+                        <th>المجموع</th>
+                        <th>نوع الطلب</th>
+                        <th>اسم العميل</th>
+                        <th>رقم الطلب</th>
+                        <th>#</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($orders as $order)
+                    @foreach($orders as $order)
                     <tr>
                         <td>
-                            <strong>{{ $order->order_number }}</strong>
+                            <a href="{{ route('orders.edit', $order) }}" class="btn btn-sm btn-warning" title="تعديل"><i class="bi bi-pencil"></i></a>
+                            <a href="{{ route('orders.show', $order) }}" class="btn btn-sm btn-info text-white" title="عرض"><i class="bi bi-eye"></i></a>
+                            <form action="{{ route('orders.destroy', $order) }}" method="POST" style="display:inline-block">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger" title="حذف" onclick="return confirm('تأكيد الحذف؟')"><i class="bi bi-trash"></i></button>
+                            </form>
                         </td>
-                        <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
-                        <td>{{ $order->customer_name ?? 'عميل نقدي' }}</td>
-                        <td>
-                            <span class="badge bg-info">
-                                {{ $order->type === 'dine_in' ? 'في المطعم' : 
-                                   ($order->type === 'takeaway' ? 'توصيل' : 
-                                   ($order->type === 'delivery' ? 'توصيل' : 'تجهيز وليمة')) }}
-                            </span>
-                        </td>
-                        <td><strong>{{ number_format($order->total_amount, 2) }} ريال</strong></td>
-                        <td>
-                            <select class="form-select form-select-sm" onchange="updateOrderStatus({{ $order->id }}, this.value)"
-                                @if(!Auth::user()->canManageOrders()) disabled @endif>
-                                <option value="pending" {{ $order->status == 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
-                                <option value="preparing" {{ $order->status == 'preparing' ? 'selected' : '' }}>قيد التحضير</option>
-                                <option value="ready" {{ $order->status == 'ready' ? 'selected' : '' }}>جاهز</option>
-                                <option value="completed" {{ $order->status == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                                <option value="cancelled" {{ $order->status == 'cancelled' ? 'selected' : '' }}>ملغي</option>
-                            </select>
-                        </td>
-                        <td>{{ $order->user->name }}</td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ route('orders.show', $order) }}" class="btn btn-primary" title="عرض">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                @if(Auth::user()->canManageOrders() && in_array($order->status, ['pending', 'preparing', 'ready']))
-                                <a href="{{ route('orders.edit', $order) }}" class="btn btn-warning" title="تعديل">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                @endif
-                                <button onclick="printOrder({{ $order->id }})" class="btn btn-success" title="طباعة">
-                                    <i class="bi bi-printer"></i>
-                                </button>
-                                @if(Auth::user()->canManageOrders() && !in_array($order->status, ['completed', 'cancelled']))
-                                <button onclick="deleteOrder({{ $order->id }})" class="btn btn-danger" title="حذف">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                                @endif
-                            </div>
-                        </td>
+                        <td>{{ $order->status ?? '-' }}</td>
+                        <td>{{ $order->total ?? '-' }}</td>
+                        <td>{{ $order->type ?? '-' }}</td>
+                        <td>{{ $order->client->name ?? '-' }}</td>
+                        <td>{{ $order->order_number ?? '-' }}</td>
+                        <td>{{ $order->id }}</td>
                     </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="text-center py-4">
-                            <i class="bi bi-inbox fa-3x text-muted"></i>
-                            <p class="mt-2 text-muted">لا توجد طلبات</p>
-                        </td>
-                    </tr>
-                    @endforelse
+                    @endforeach
                 </tbody>
             </table>
         </div>
-
-        <!-- Pagination -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <div>
-                عرض {{ $orders->firstItem() }} إلى {{ $orders->lastItem() }} من {{ $orders->total() }} طلب
-            </div>
-            {{ $orders->links() }}
-        </div>
     </div>
 </div>
-@endsection
-
-@section('scripts')
-<script>
-    function updateOrderStatus(orderId, status) {
-        if (!confirm('هل أنت متأكد من تغيير حالة الطلب؟')) {
-            location.reload();
-            return;
-        }
-
-        fetch(`/orders/${orderId}/status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    status: status
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert(data.message, 'success');
-                } else {
-                    showAlert(data.message, 'danger');
-                    location.reload();
-                }
-            })
-            .catch(error => {
-                showAlert('حدث خطأ ما', 'danger');
-                location.reload();
-            });
-    }
-
-    function printOrder(orderId) {
-        window.open(`/orders/${orderId}/print`, '_blank');
-    }
-
-    function deleteOrder(orderId) {
-        if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
-            return;
-        }
-
-        fetch(`/orders/${orderId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert(data.message, 'success');
-                    location.reload();
-                } else {
-                    showAlert(data.message, 'danger');
-                }
-            })
-            .catch(error => {
-                showAlert('حدث خطأ ما', 'danger');
-            });
-    }
-</script>
 @endsection

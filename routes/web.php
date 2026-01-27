@@ -26,6 +26,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+
 // Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('dashboard.sales-data')->middleware('auth');
@@ -38,6 +39,11 @@ Route::get('/orders/kitchen', [OrderController::class, 'kitchenOrders'])->name('
 Route::post('/orders/items/store', [OrderItemController::class, 'store'])->name('orders.items.store')->middleware('auth');
 Route::put('/orders/items/{item}/update', [OrderItemController::class, 'update'])->name('orders.items.update')->middleware('auth');
 Route::get('/orders/items/{item}/destroy', [OrderItemController::class, 'destroy'])->name('orders.items.destroy')->middleware('auth');
+
+
+Route::group(['middleware' => 'auth'], function () {
+    Route::get('/users', [UserController::class, 'addItems'])->name('orders.add-items');
+});
 
 // Clients Routes
 Route::resource('clients', ClientController::class)->middleware('auth');
@@ -58,6 +64,15 @@ Route::group(['middleware' => 'auth'], function () {
 });
 
 // Categories Routes
+
+// Settings: Rooms & Tables
+use App\Http\Controllers\RoomController;
+use App\Http\Controllers\TableController;
+
+Route::middleware('auth')->prefix('settings')->group(function () {
+    Route::resource('rooms', RoomController::class);
+    Route::resource('tables', TableController::class);
+});
 Route::resource('categories', CategoryController::class)->middleware('auth');
 Route::post('/categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggleStatus')->middleware('auth');
 Route::get('/categories/active', [CategoryController::class, 'getActiveCategories'])->name('categories.active')->middleware('auth');
@@ -136,3 +151,6 @@ Route::prefix('api')->middleware('auth')->group(function () {
 // Route::fallback(function () {
 //     return response()->view('errors.404', [], 404);
 // });
+
+// Users resource routes
+Route::resource('users', UserController::class)->middleware('auth');

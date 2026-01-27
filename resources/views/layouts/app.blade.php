@@ -52,6 +52,17 @@
             font-size: 16px;
         }
 
+        [dir=rtl] .input-group .input-group-text:first-child,
+        [dir=rtl] .input-group .form-control:first-child,
+        [dir=rtl] .input-group .form-select:first-child {
+            border-radius: 0 0.6rem 0.6rem 0 !important;
+        }
+        [dir=rtl] .input-group .input-group-text:last-child,
+        [dir=rtl] .input-group .form-control:last-child,
+        [dir=rtl] .input-group .form-select:last-child {
+            border-radius: 0.6rem 0 0 0.6rem !important;
+        }
+
         body.touch-mode .btn {
             min-height: 50px;
             font-size: 18px;
@@ -384,77 +395,108 @@
             <div class="row">
                 <!-- Sidebar -->
                 @if(Auth::check())
-                <nav class="col-md-3 col-lg-2 d-md-block sidebar">
-                    <div class="position-sticky pt-3">
-                        <ul class="nav flex-column">
+                <nav class="col-md-3 col-lg-2 d-md-block sidebar" style="padding:0.5rem 0 0.5rem 0; min-width:210px;">
+                    <div class="position-sticky pt-2">
+                        <ul class="nav flex-column" style="gap:2px;">
+                            <!-- Dashboard -->
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                                    <i class="bi bi-speedometer2"></i>
-                                    لوحة التحكم
+                                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" style="padding:8px 18px; font-size:14px;">
+                                    <i class="bi bi-speedometer2"></i> <span>لوحة التحكم</span>
                                 </a>
                             </li>
-
-                            @if(Auth::user()->canManageOrders())
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" href="{{ route('orders.index') }}">
-                                    <i class="bi bi-receipt"></i>
-                                    الطلبات
-                                </a>
-                            </li>
-                            @endif
-
+                            <!-- Products Dropdown -->
                             @if(Auth::user()->canManageInventory())
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">
-                                    <i class="bi bi-box"></i>
-                                    المنتجات
+                                <a class="nav-link d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#productsMenu" role="button" aria-expanded="{{ request()->is('products*') || request()->is('categories*') ? 'true' : 'false' }}" aria-controls="productsMenu" style="padding:8px 18px; font-size:14px;">
+                                    <span><i class="bi bi-box"></i> المنتجات</span>
+                                    <i class="bi bi-chevron-down small"></i>
                                 </a>
+                                <div class="collapse {{ request()->is('products*') || request()->is('categories*') ? 'show' : '' }}" id="productsMenu">
+                                    <ul class="nav flex-column ms-2" style="border-right:2px solid #e5e7eb;">
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->routeIs('products.index') ? 'active' : '' }}" href="{{ route('products.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-grid"></i> قائمة المنتجات</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-tags"></i> الفئات</a>
+                                        </li>
+                                        <!-- أضف روابط فرعية أخرى هنا -->
+                                    </ul>
+                                </div>
                             </li>
+                            @endif
+                            <!-- Orders -->
+                            @if(Auth::user()->canManageOrders())
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}">
-                                    <i class="bi bi-tags"></i>
-                                    الفئات
+                                <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" href="{{ route('orders.index') }}" style="padding:8px 18px; font-size:14px;">
+                                    <i class="bi bi-receipt"></i> الطلبات
                                 </a>
                             </li>
                             @endif
-
+                            <!-- Sales/Financials Dropdown -->
+                            <li class="nav-item">
+                                <a class="nav-link d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#salesMenu" role="button" aria-expanded="{{ request()->is('shifts*') || request()->is('expenses*') ? 'true' : 'false' }}" aria-controls="salesMenu" style="padding:8px 18px; font-size:14px;">
+                                    <span><i class="bi bi-cart"></i> المبيعات & المالية</span>
+                                    <i class="bi bi-chevron-down small"></i>
+                                </a>
+                                <div class="collapse {{ request()->is('shifts*') || request()->is('expenses*') ? 'show' : '' }}" id="salesMenu">
+                                    <ul class="nav flex-column ms-2" style="border-right:2px solid #e5e7eb;">
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->routeIs('shifts.*') ? 'active' : '' }}" href="{{ route('shifts.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-clock"></i> الشيفتات</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}" href="{{ route('expenses.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-cash"></i> المصروفات</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <!-- Clients/Users Dropdown -->
+                            <li class="nav-item">
+                                <a class="nav-link d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#usersMenu" role="button" aria-expanded="{{ request()->is('clients*') || request()->is('users*') ? 'true' : 'false' }}" aria-controls="usersMenu" style="padding:8px 18px; font-size:14px;">
+                                    <span><i class="bi bi-people"></i> العملاء والمستخدمون</span>
+                                    <i class="bi bi-chevron-down small"></i>
+                                </a>
+                                <div class="collapse {{ request()->is('clients*') || request()->is('users*') ? 'show' : '' }}" id="usersMenu">
+                                    <ul class="nav flex-column ms-2" style="border-right:2px solid #e5e7eb;">
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-person-lines-fill"></i> العملاء</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-person"></i> المستخدمون</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
+                            <!-- Settings Dropdown -->
+                            <li class="nav-item">
+                                <a class="nav-link d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#settingsMenu" role="button" aria-expanded="{{ request()->is('settings/*') ? 'true' : 'false' }}" aria-controls="settingsMenu" style="padding:8px 18px; font-size:14px;">
+                                    <span><i class="bi bi-gear"></i> الإعدادات</span>
+                                    <i class="bi bi-chevron-down small"></i>
+                                </a>
+                                <div class="collapse {{ request()->is('settings/*') ? 'show' : '' }}" id="settingsMenu">
+                                    <ul class="nav flex-column ms-2" style="border-right:2px solid #e5e7eb;">
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}" href="{{ route('rooms.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-door-open"></i> الغرف</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->routeIs('tables.*') ? 'active' : '' }}" href="{{ route('tables.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-table"></i> الطاولات</a>
+                                        </li>
+                                        <!-- أضف روابط إعدادات أخرى هنا -->
+                                    </ul>
+                                </div>
+                            </li>
+                            <!-- التقارير -->
                             @if(Auth::user()->canViewReports())
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}">
-                                    <i class="bi bi-graph-up"></i>
-                                    العملاء
+                                <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}" style="padding:8px 18px; font-size:14px;">
+                                    <i class="bi bi-graph-up"></i> التقارير
                                 </a>
                             </li>
                             @endif
-                            @if(Auth::user()->canViewReports())
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
-                                    <i class="bi bi-graph-up"></i>
-                                    التقارير
-                                </a>
-                            </li>
-                            @endif
-
-                            @if(Auth::user()->isAdmin())
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('shifts.*') ? 'active' : '' }}" href="{{ route('shifts.index') }}">
-                                    <i class="bi bi-clock"></i>
-                                    الشيفتات
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}" href="{{ route('expenses.index') }}">
-                                    <i class="bi bi-cash"></i>
-                                    المصروفات
-                                </a>
-                            </li>
-                            @endif
-
+                            <!-- المطبخ -->
                             @if(Auth::user()->isKitchen())
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('orders.kitchen') }}">
-                                    <i class="bi bi-egg-fried"></i>
-                                    المطبخ
+                                <a class="nav-link {{ request()->routeIs('orders.kitchen') ? 'active' : '' }}" href="{{ route('orders.kitchen') }}" style="padding:8px 18px; font-size:14px;">
+                                    <i class="bi bi-egg-fried"></i> المطبخ
                                 </a>
                             </li>
                             @endif

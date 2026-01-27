@@ -11,6 +11,7 @@ return [
       'edit_order' => 'تعديل الطلب',
       'order_details' => 'تفاصيل الطلب',
       'order_summary' => 'ملخص الطلب',
+    'client_information' => 'معلومات العميل',
     ],
     'welcome' => 'Welcome to our application!',
     'login' => 'Login',

@@ -59,7 +59,7 @@
         }
 
         .order-types .btn:first-child {
-            margin-inline-start: 0.6rem;
+            margin-inline-start: 1rem;
         }
 
         .update-order-item-form input,
@@ -73,14 +73,7 @@
             border-radius: 0.6rem
         }
 
-
-
-        [dir=rtl] .input-group input:first-child,
-        [dir=rtl] .input-group label:first-child,
-        [dir=rtl] .input-group button:first-child,
-        [dir=rtl] .input-group select:first-child {
-            border-radius: 0 0.6rem 0.6rem 0 !important;
-        }
+        
 
         @media (min-width: 991px) {
 
@@ -93,12 +86,7 @@
             }
         }
 
-        [dir=rtl] .input-group input:last-child,
-        [dir=rtl] .input-group label:last-child,
-        [dir=rtl] .input-group select:last-child,
-        [dir=rtl] .input-group button:last-child {
-            border-radius: 0.6rem 0 0 0.6rem !important;
-        }
+       
     </style>
     {{-- Top Devisions --}}
     <div class="row">
@@ -188,7 +176,7 @@
     No items added yest, please add some items
     @endforelse
     @if ($orderItems->count() > 0)
-    <h4 class="bg-secondary text-white text-center py-1">{{ __('orders.titles.order_items') }}</h4>
+    <h4 class="bg-secondary text-white text-center py-1">{{ __('orders.titles.client_information') }}</h4>
     <form action="{{route('orders.update', $order->id)}}" method="POST">
         @csrf
         @method('PUT')
@@ -198,20 +186,35 @@
             <button type="button" class="btn btn-outline-primary">Delivery</button>
             <button type="button" class="btn btn-outline-primary">Feast</button>
         </div>
-        <div class="inputs border border-primary p-3" style="margin-top: -1">
+        <div class="inputs border border-primary p-3" 
+            style="margin-top: -2px; background-color: #e07aee; border-radius: 0.6rem;">
+            <!-- Customer Search with Autocomplete -->
+            <div class="mb-2">
+                <label for="customerSearch" class="form-label fw-bold text-white">
+                    <i class="bi bi-search"></i> البحث عن العميل
+                </label>
+                <div class="position-relative">
+                    <input type="text" 
+                           class="form-control" 
+                           id="customerSearch" 
+                           placeholder="ابحث بالاسم أو رقم الهاتف..."
+                           autocomplete="off"
+                           style="height: 3rem; border-radius: 0.6rem;">
+                    <div class="position-absolute w-100" style="z-index: 1050;">
+                        <ul id="customerSearchResults" class="list-group d-none shadow-lg" style="max-height: 300px; overflow-y: auto;"></ul>
+                    </div>
+                </div>
+                <small class="text-white"><i class="bi bi-info-circle"></i> ابدأ بالكتابة للبحث (حرفين على الأقل)</small>
+            </div>
+
             <div class="input-group mb-1">
-                <label for="customer_name" class="input-group-text">Client</label>
-                <input type="text" name="client_name" id="client_name" class="form-control" value="{{ old('client_name') }}">
-                <select type="text" name="client_id" id="client_id" class="form-select" value="{{ old('client_id') }}">
-                    <option value="">اختر العميل</option>
-                    @foreach($clients as $client)
-                    <option value="{{$client->id}}">{{$client->name}}</option>
-                    @endforeach
-                </select>
+                <label for="client_name" class="input-group-text">Client</label>
+                <input type="hidden" name="client_id" id="client_id" value="{{ old('client_id') }}">
+                <input type="text" name="client_name" id="client_name" class="form-control" value="{{ old('client_name') }}" placeholder="اسم العميل">
             </div>
             <div class="input-group mb-1">
                 <label for="phone" class="input-group-text">Phone</label>
-                <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}">
+                <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}" placeholder="رقم الهاتف">
             </div>
             <div class="input-group mb-1">
                 <label for="address" class="input-group-text">Address</label>
@@ -227,35 +230,213 @@
 </div>
 
 <script>
-    ['client_name', 'phone'].forEach(function(id) {
-        document.getElementById(id).addEventListener('input', function() {
-            if (this.value.length >= 2) searchClient(this.value, 'client_id');
-        });
-    })
+document.addEventListener('DOMContentLoaded', function() {
+    const customerSearchInput = document.getElementById('customerSearch');
+    const customerSearchResults = document.getElementById('customerSearchResults');
+    const customerNameInput = document.getElementById('client_name');
+    const customerPhoneInput = document.getElementById('phone');
+    const customerIdInput = document.getElementById('client_id');
+    
+    let searchTimeout;
 
-    function searchClient(value, id) {
-        $.ajax({
-            url: `/clients/search/by/name/or/phone`,
-            type: 'GET',
-            data: {
-                search: value
-            },
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            success: function(data) {
-                if (data.success && data.clients.length > 0) {
-                    var clientSelect = document.getElementById('client_id');
-                    // Add new options from search results
-                    var options = data.clients.map(function(client) {
-                        return `<option value="${client.id}">${client.name}</option>`;
-                    });
-
-                    console.log(options);
-                    clientSelect.innerHTML = options.join('');
-                }
-            },
+    // Advanced Customer Search with Autocomplete
+    if (customerSearchInput) {
+        customerSearchInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+            
+            // Hide results if search term is too short
+            if (searchTerm.length < 2) {
+                customerSearchResults.classList.add('d-none');
+                customerSearchResults.innerHTML = '';
+                return;
+            }
+            
+            // Set a new timeout for search
+            searchTimeout = setTimeout(() => {
+                searchCustomers(searchTerm);
+            }, 300); // Wait 300ms after user stops typing
         });
     }
+
+    // Search Customers Function
+    function searchCustomers(searchTerm) {
+        // Show loading state
+        customerSearchResults.innerHTML = '<li class="list-group-item"><div class="spinner-border spinner-border-sm me-2" role="status"></div> جاري البحث...</li>';
+        customerSearchResults.classList.remove('d-none');
+        
+        // Make AJAX request
+        fetch(`{{ route('clients.searchByNameOrPhone') }}?search=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.clients && data.clients.length > 0) {
+                    displaySearchResults(data.clients);
+                } else {
+                    customerSearchResults.innerHTML = '<li class="list-group-item text-muted text-center">لم يتم العثور على نتائج</li>';
+                }
+            })
+            .catch(error => {
+                console.error('Error searching customers:', error);
+                customerSearchResults.innerHTML = '<li class="list-group-item text-danger text-center">حدث خطأ في البحث</li>';
+            });
+    }
+
+    // Display Search Results
+    function displaySearchResults(clients) {
+        customerSearchResults.innerHTML = '';
+        
+        clients.forEach(client => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item list-group-item-action customer-result-item';
+            li.style.cursor = 'pointer';
+            li.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong class="d-block"><i class="bi bi-person-fill text-primary"></i> ${client.name}</strong>
+                        <small class="text-muted"><i class="bi bi-telephone-fill"></i> ${client.phone}</small>
+                    </div>
+                    <i class="bi bi-arrow-left-circle text-primary fs-5"></i>
+                </div>
+            `;
+            
+            // Click handler for selecting a customer
+            li.addEventListener('click', function() {
+                selectCustomer(client);
+            });
+            
+            customerSearchResults.appendChild(li);
+        });
+    }
+
+    // Select Customer Function
+    function selectCustomer(client) {
+        // Fill in the customer details
+        customerIdInput.value = client.id;
+        customerNameInput.value = client.name;
+        customerPhoneInput.value = client.phone;
+        
+        // Clear and hide search results
+        customerSearchInput.value = client.name + ' - ' + client.phone;
+        customerSearchResults.classList.add('d-none');
+        customerSearchResults.innerHTML = '';
+        
+        // Visual feedback - Add success animation
+        customerNameInput.classList.add('border-success', 'border-3');
+        customerPhoneInput.classList.add('border-success', 'border-3');
+        
+        // Show success notification
+        showNotification('✅ تم اختيار العميل بنجاح!', 'success');
+        
+        setTimeout(() => {
+            customerNameInput.classList.remove('border-success', 'border-3');
+            customerPhoneInput.classList.remove('border-success', 'border-3');
+        }, 2000);
+    }
+
+    // Show notification function
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} position-fixed shadow-lg`;
+        notification.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px; animation: slideDown 0.3s ease-out;';
+        notification.innerHTML = `
+            <div class="d-flex align-items-center justify-content-between">
+                <span>${message}</span>
+                <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+            </div>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (customerSearchInput && !customerSearchInput.contains(e.target) && !customerSearchResults.contains(e.target)) {
+            customerSearchResults.classList.add('d-none');
+        }
+    });
+
+    // Clear customer ID if name or phone is manually changed
+    if (customerNameInput) {
+        customerNameInput.addEventListener('input', function() {
+            if (customerIdInput.value) {
+                customerIdInput.value = '';
+            }
+        });
+    }
+
+    if (customerPhoneInput) {
+        customerPhoneInput.addEventListener('input', function() {
+            if (customerIdInput.value) {
+                customerIdInput.value = '';
+            }
+        });
+    }
+});
 </script>
+
+<style>
+.customer-result-item {
+    transition: all 0.2s ease;
+}
+
+.customer-result-item:hover {
+    background-color: #e3f2fd !important;
+    transform: translateX(-5px);
+    border-right: 4px solid #2196F3;
+}
+
+#customerSearchResults {
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    border-radius: 0.6rem;
+    margin-top: 2px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.border-success {
+    animation: successPulse 0.6s ease-in-out;
+}
+
+@keyframes successPulse {
+    0%, 100% { 
+        border-color: #198754; 
+    }
+    50% { 
+        border-color: #28a745; 
+        box-shadow: 0 0 15px rgba(40, 167, 69, 0.5); 
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -20px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+/* Make the search input stand out */
+#customerSearch:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+</style>
 @endsection
