@@ -12,6 +12,10 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderItemController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\CashierSessionController;
+use App\Http\Controllers\PosDeviceController;
+use App\Http\Controllers\PrinterController;
 
 // Language Switch
 Route::get('locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
@@ -100,10 +104,47 @@ Route::prefix('reports')->middleware('auth')->group(function () {
     Route::get('/shifts', [ReportController::class, 'shiftsReport'])->name('reports.shifts');
 });
 
+// Cashier Sessions Routes
+Route::prefix('cashier-sessions')->middleware('auth')->group(function () {
+    Route::get('/', [CashierSessionController::class, 'index'])->name('cashier-sessions.index');
+    Route::post('/', [CashierSessionController::class, 'store'])->name('cashier-sessions.store');
+    Route::post('/{id}/end', [CashierSessionController::class, 'endSession'])->name('cashier-sessions.end');
+    Route::get('/{id}', [CashierSessionController::class, 'show'])->name('cashier-sessions.show');
+    Route::get('/{id}/print', [CashierSessionController::class, 'print'])->name('cashier-sessions.print');
+});
+
+// POS Devices Routes
+Route::prefix('pos-devices')->middleware('auth')->group(function () {
+    Route::get('/', [PosDeviceController::class, 'index'])->name('pos-devices.index');
+    Route::post('/', [PosDeviceController::class, 'store'])->name('pos-devices.store');
+    Route::put('/{id}', [PosDeviceController::class, 'update'])->name('pos-devices.update');
+    Route::delete('/{id}', [PosDeviceController::class, 'destroy'])->name('pos-devices.destroy');
+    Route::post('/{id}/test', [PosDeviceController::class, 'testConnection'])->name('pos-devices.test');
+    Route::post('/{id}/print-test', [PosDeviceController::class, 'printTest'])->name('pos-devices.print-test');
+    Route::get('/{id}', [PosDeviceController::class, 'show'])->name('pos-devices.show');
+});
+
+// Printers Routes
+Route::prefix('printers')->group(function () {
+    Route::get('/', [PrinterController::class, 'index'])->name('printers.index');
+    Route::post('/', [PrinterController::class, 'store'])->name('printers.store');
+    Route::put('/{id}', [PrinterController::class, 'update'])->name('printers.update');
+    Route::delete('/{id}', [PrinterController::class, 'destroy'])->name('printers.destroy');
+    Route::post('/{id}/test', [PrinterController::class, 'testConnection'])->name('printers.test');
+    Route::post('/{id}/print-test', [PrinterController::class, 'printTest'])->name('printers.print-test');
+    Route::post('/{id}/print', [PrinterController::class, 'printContent'])->name('printers.print');
+    Route::get('/{id}', [PrinterController::class, 'show'])->name('printers.show');
+});
+
 // API Routes for AJAX calls
 Route::prefix('api')->middleware('auth')->group(function () {
     // Get current shift info
     Route::get('/current-shift', [ShiftController::class, 'getCurrentShift']);
+
+    // Printer Discovery API Routes
+    Route::get('/printers/discover', [\App\Http\Controllers\Api\PrinterDiscoveryController::class, 'discover']);
+    Route::post('/printers/test', [\App\Http\Controllers\Api\PrinterDiscoveryController::class, 'testPrinter']);
+    Route::post('/printers/print-test', [\App\Http\Controllers\Api\PrinterDiscoveryController::class, 'printTestPage']);
 
     // POS API Routes
     Route::get('/categories', [CategoryController::class, 'getActiveCategories']);

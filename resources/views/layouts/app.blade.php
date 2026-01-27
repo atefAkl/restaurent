@@ -15,7 +15,7 @@
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    
+
     {{-- Cairo font family --}}
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
@@ -32,6 +32,11 @@
             --dark-color: #1e293b;
             --border-radius: 8px;
             --transition: all 0.3s ease;
+        }
+
+        p,
+        .breadcrumb ol {
+            margin-bottom: 0;
         }
 
         * {
@@ -57,6 +62,7 @@
         [dir=rtl] .input-group .form-select:first-child {
             border-radius: 0 0.6rem 0.6rem 0 !important;
         }
+
         [dir=rtl] .input-group .input-group-text:last-child,
         [dir=rtl] .input-group .form-control:last-child,
         [dir=rtl] .input-group .form-select:last-child {
@@ -377,13 +383,13 @@
                             {{ Auth::user()->name }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-start">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> الملف الشخصي</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> الإعدادات</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> {{__('app.user_links.profile')}}</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> {{__('app.user_links.settings')}}</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
                             <li><a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    <i class="bi bi-box-arrow-right"></i> تسجيل الخروج
+                                    <i class="bi bi-box-arrow-right"></i> {{__('app.user_links.logout')}}
                                 </a></li>
                         </ul>
                     </div>
@@ -401,23 +407,25 @@
                             <!-- Dashboard -->
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" style="padding:8px 18px; font-size:14px;">
-                                    <i class="bi bi-speedometer2"></i> <span>لوحة التحكم</span>
+                                    <i class="bi bi-speedometer2"></i> <span>{{__('app.sidebar.dashboard')}}</span>
                                 </a>
                             </li>
                             <!-- Products Dropdown -->
                             @if(Auth::user()->canManageInventory())
                             <li class="nav-item">
                                 <a class="nav-link d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#productsMenu" role="button" aria-expanded="{{ request()->is('products*') || request()->is('categories*') ? 'true' : 'false' }}" aria-controls="productsMenu" style="padding:8px 18px; font-size:14px;">
-                                    <span><i class="bi bi-box"></i> المنتجات</span>
+                                    <span><i class="bi bi-box"></i> {{__('app.sidebar.products')}}</span>
                                     <i class="bi bi-chevron-down small"></i>
                                 </a>
                                 <div class="collapse {{ request()->is('products*') || request()->is('categories*') ? 'show' : '' }}" id="productsMenu">
                                     <ul class="nav flex-column ms-2" style="border-right:2px solid #e5e7eb;">
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('products.index') ? 'active' : '' }}" href="{{ route('products.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-grid"></i> قائمة المنتجات</a>
+                                            <a class="nav-link {{ request()->routeIs('products.index') ? 'active' : '' }}" href="{{ route('products.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-grid"></i> {{__('app.sidebar.products_list')}}</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-tags"></i> الفئات</a>
+                                            <a class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}" href="{{ route('categories.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-tags"></i> {{__('app.sidebar.products_categories')}}</a>
                                         </li>
                                         <!-- أضف روابط فرعية أخرى هنا -->
                                     </ul>
@@ -428,23 +436,27 @@
                             @if(Auth::user()->canManageOrders())
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('orders.*') ? 'active' : '' }}" href="{{ route('orders.index') }}" style="padding:8px 18px; font-size:14px;">
-                                    <i class="bi bi-receipt"></i> الطلبات
+                                    <i class="bi bi-receipt"></i> {{__('app.sidebar.pos')}}
                                 </a>
                             </li>
                             @endif
                             <!-- Sales/Financials Dropdown -->
                             <li class="nav-item">
                                 <a class="nav-link d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#salesMenu" role="button" aria-expanded="{{ request()->is('shifts*') || request()->is('expenses*') ? 'true' : 'false' }}" aria-controls="salesMenu" style="padding:8px 18px; font-size:14px;">
-                                    <span><i class="bi bi-cart"></i> المبيعات & المالية</span>
+                                    <span><i class="bi bi-cart"></i> {{__('app.sidebar.sales_and_financials')}}</span>
                                     <i class="bi bi-chevron-down small"></i>
                                 </a>
                                 <div class="collapse {{ request()->is('shifts*') || request()->is('expenses*') ? 'show' : '' }}" id="salesMenu">
                                     <ul class="nav flex-column ms-2" style="border-right:2px solid #e5e7eb;">
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('shifts.*') ? 'active' : '' }}" href="{{ route('shifts.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-clock"></i> الشيفتات</a>
+                                            <a class="nav-link {{ request()->routeIs('shifts.*') ? 'active' : '' }}" href="{{ route('shifts.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-clock"></i> {{__('app.sidebar.shifts')}}
+                                            </a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}" href="{{ route('expenses.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-cash"></i> المصروفات</a>
+                                            <a class="nav-link {{ request()->routeIs('expenses.*') ? 'active' : '' }}" href="{{ route('expenses.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-cash"></i> {{__('app.sidebar.expenses')}}
+                                            </a>
                                         </li>
                                     </ul>
                                 </div>
@@ -452,16 +464,20 @@
                             <!-- Clients/Users Dropdown -->
                             <li class="nav-item">
                                 <a class="nav-link d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#usersMenu" role="button" aria-expanded="{{ request()->is('clients*') || request()->is('users*') ? 'true' : 'false' }}" aria-controls="usersMenu" style="padding:8px 18px; font-size:14px;">
-                                    <span><i class="bi bi-people"></i> العملاء والمستخدمون</span>
+                                    <span><i class="bi bi-people"></i> {{__('app.sidebar.accounts')}}</span>
                                     <i class="bi bi-chevron-down small"></i>
                                 </a>
                                 <div class="collapse {{ request()->is('clients*') || request()->is('users*') ? 'show' : '' }}" id="usersMenu">
                                     <ul class="nav flex-column ms-2" style="border-right:2px solid #e5e7eb;">
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-person-lines-fill"></i> العملاء</a>
+                                            <a class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-person-lines-fill"></i> {{__('app.sidebar.clients')}}
+                                            </a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-person"></i> المستخدمون</a>
+                                            <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-person"></i> {{__('app.sidebar.users')}}
+                                            </a>
                                         </li>
                                     </ul>
                                 </div>
@@ -469,17 +485,40 @@
                             <!-- Settings Dropdown -->
                             <li class="nav-item">
                                 <a class="nav-link d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#settingsMenu" role="button" aria-expanded="{{ request()->is('settings/*') ? 'true' : 'false' }}" aria-controls="settingsMenu" style="padding:8px 18px; font-size:14px;">
-                                    <span><i class="bi bi-gear"></i> الإعدادات</span>
+                                    <span><i class="bi bi-gear"></i> {{__('app.sidebar.settings')}}</span>
                                     <i class="bi bi-chevron-down small"></i>
                                 </a>
                                 <div class="collapse {{ request()->is('settings/*') ? 'show' : '' }}" id="settingsMenu">
                                     <ul class="nav flex-column ms-2" style="border-right:2px solid #e5e7eb;">
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}" href="{{ route('rooms.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-door-open"></i> الغرف</a>
+                                            <a class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}" href="{{ route('rooms.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-door-open"></i> {{__('app.sidebar.rooms')}}
+                                            </a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('tables.*') ? 'active' : '' }}" href="{{ route('tables.index') }}" style="padding:6px 16px; font-size:13px;"><i class="bi bi-table"></i> الطاولات</a>
+                                            <a class="nav-link {{ request()->routeIs('tables.*') ? 'active' : '' }}" href="{{ route('tables.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-table"></i> {{__('app.sidebar.tables')}}
+                                            </a>
                                         </li>
+                                        @if(Auth::user()->canManageCashierSessions())
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->is('cashier-sessions*') ? 'active' : '' }}" href="{{ route('cashier-sessions.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-cash-stack"></i> {{__('cashier_sessions.titles.cashier_sessions')}}
+                                            </a>
+                                        </li>
+                                        @endif
+                                        @if(Auth::user()->canManageSettings())
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->is('pos-devices*') ? 'active' : '' }}" href="{{ route('pos-devices.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-printer"></i> {{__('cashier_sessions.titles.pos_devices')}}
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->is('printers*') ? 'active' : '' }}" href="{{ route('printers.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-printer-fill"></i> {{__('cashier_sessions.titles.printers')}}
+                                            </a>
+                                        </li>
+                                        @endif
                                         <!-- أضف روابط إعدادات أخرى هنا -->
                                     </ul>
                                 </div>
@@ -488,7 +527,7 @@
                             @if(Auth::user()->canViewReports())
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}" style="padding:8px 18px; font-size:14px;">
-                                    <i class="bi bi-graph-up"></i> التقارير
+                                    <i class="bi bi-graph-up"></i> {{__('app.sidebar.reports')}}
                                 </a>
                             </li>
                             @endif
@@ -496,7 +535,7 @@
                             @if(Auth::user()->isKitchen())
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('orders.kitchen') ? 'active' : '' }}" href="{{ route('orders.kitchen') }}" style="padding:8px 18px; font-size:14px;">
-                                    <i class="bi bi-egg-fried"></i> المطبخ
+                                    <i class="bi bi-egg-fried"></i> {{__('app.sidebar.kitchen')}}
                                 </a>
                             </li>
                             @endif
@@ -538,6 +577,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
+    @stack('scripts')
+
     <script>
         // Touch Mode Toggle
         function toggleTouchMode() {
@@ -551,40 +592,32 @@
             }
         }
 
-        // Load touch mode preference
+        // Notification System
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            // Add to body
+            document.body.appendChild(notification);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Initialize touch mode from localStorage
         if (localStorage.getItem('touchMode') === 'true') {
             document.body.classList.add('touch-mode');
         }
-
-        // Common AJAX functions
-        function showLoading() {
-            // Show loading spinner
-        }
-
-        function hideLoading() {
-            // Hide loading spinner
-        }
-
-        function showAlert(message, type = 'success') {
-            const alertHtml = `
-                <div class="alert alert-${type} alert-dismissible fade show fade-in" role="alert">
-                    <i class="bi bi-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-
-            const alertContainer = document.querySelector('.main-content');
-            alertContainer.insertAdjacentHTML('afterbegin', alertHtml);
-        }
-
-        // Auto-hide alerts after 5 seconds
-        setTimeout(() => {
-            document.querySelectorAll('.alert').forEach(alert => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            });
-        }, 5000);
     </script>
 
     @yield('scripts')

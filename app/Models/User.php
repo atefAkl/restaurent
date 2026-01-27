@@ -109,4 +109,14 @@ class User extends Authenticatable
     {
         return in_array($this->role, ['admin', 'seller']);
     }
+
+    public function canManageSettings()
+    {
+        return in_array($this->role, ['admin']);
+    }
+
+    public function canManageCashierSessions()
+    {
+        return in_array($this->role, ['admin', 'seller']);
+    }
 }

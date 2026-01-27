@@ -23,6 +23,11 @@ class Category extends Model
         'is_active' => 'boolean',
     ];
 
+    public function getProductsCountAttribute()
+    {
+        return $this->products()->count();
+    }
+
     public function products()
     {
         return $this->hasMany(Product::class);

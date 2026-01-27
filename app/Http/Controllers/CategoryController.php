@@ -17,9 +17,9 @@ class CategoryController extends Controller
                 $query->where('name_ar', 'like', "%{$search}%")
                     ->orWhere('name_en', 'like', "%{$search}%");
             })
+            ->withCount('products')
             ->orderBy('sort_order')
             ->paginate(20);
-
         return view('categories.index', compact('categories'));
     }
 
