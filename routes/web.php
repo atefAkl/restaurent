@@ -195,3 +195,21 @@ Route::prefix('api')->middleware('auth')->group(function () {
 
 // Users resource routes
 Route::resource('users', UserController::class)->middleware('auth');
+
+// Roles management
+use App\Http\Controllers\RoleController;
+
+Route::prefix('settings')->middleware('auth')->group(function () {
+    Route::resource('roles', RoleController::class);
+});
+
+// Permissions management
+use App\Http\Controllers\PermissionController;
+
+Route::prefix('settings')->middleware('auth')->group(function () {
+    Route::resource('permissions', PermissionController::class);
+});
+
+// Assign roles to users
+Route::get('/users/{user}/roles', [UserController::class, 'editRoles'])->name('users.roles.edit')->middleware('auth');
+Route::put('/users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles.update')->middleware('auth');

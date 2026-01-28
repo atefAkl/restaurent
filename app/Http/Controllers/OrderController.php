@@ -6,7 +6,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
-use App\Models\Coupon;
+use App\Models\User;
 use App\Http\Requests\OrderRequest;
 use App\Http\Requests\UpdateOrderStatusRequest;
 use App\Models\Client;
@@ -19,11 +19,12 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
+        $sellers = User::where(['role' => 'seller'])->get();
         $orders = Order::with(['user', 'orderItems.product'])
             ->latest()
             ->paginate(20);
 
-        return view('orders.index', compact('orders'));
+        return view('orders.index', compact('orders', 'sellers'));
     }
 
     public function create(Request $request)

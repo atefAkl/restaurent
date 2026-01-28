@@ -63,6 +63,20 @@
                 </tbody>
             </table>
         </div>
+        {{ $orders->links() }}
     </div>
+
+    {{-- Application Sellers --}}
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">البائعين</h5>
+            <ul>
+                @foreach($sellers as $seller)
+                    <li>{{ $seller->name }} ({{ $seller->email }})</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+
 </div>
 @endsection

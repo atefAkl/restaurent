@@ -119,4 +119,36 @@ class User extends Authenticatable
     {
         return in_array($this->role, ['admin', 'seller']);
     }
+
+    /**
+     * Roles relationship (many-to-many). Keeps backward compatibility with `role` string.
+     */
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'role_user');
+    }
+
+    public function hasRole(string $role): bool
+    {
+        if ($this->role === $role) {
+            return true;
+        }
+
+        return $this->roles()->where('name', $role)->exists();
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        // direct role string fallback
+        if ($this->role && in_array($this->role, ['admin']) && $permission) {
+            // quick admin shortcut
+            if ($this->role === 'admin') {
+                return true;
+            }
+        }
+
+        return $this->roles()->whereHas('permissions', function ($q) use ($permission) {
+            $q->where('name', $permission);
+        })->exists();
+    }
 }

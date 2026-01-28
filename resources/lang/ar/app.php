@@ -33,7 +33,22 @@ return [
     "rooms" => 'الغرف',
     "tables" => 'الطاولات',
     "reports" => 'التقارير',
-    "kitchen" => 'المطبخ'
+    "kitchen" => 'المطبخ',
+    "inventory" => 'المخزون',
+    "cashier_sessions" => 'جلسات الكاشير',
+    'suppliers' => 'الموردون',
+    'purchases' => 'المشتريات',
+    'roles' => 'الأدوار',
+  ],
+
+  'actions' => [
+    'edit' => 'تعديل',
+    'delete' => 'حذف',
+    'update' => 'تحديث',
+    'create' => 'انشاء جديد',
+    'save' => 'حفظ',
+    'cancel' => 'إلغاء',
+    'back' => 'العودة',
   ],
 
 ];

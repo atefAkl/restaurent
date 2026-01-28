@@ -108,6 +108,29 @@
             border-radius: 0.25rem 0 0 0.25rem;
         }
 
+        [dir="rtl"] .form-floating > label {
+            left: auto;
+            right: 16px;
+        }
+
+        .modal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        .modal .modal-header h5 {
+            margin-bottom: 0;
+            font-weight: 700;
+            font-size: 1rem;
+            flex: auto;
+        }
+
+        .modal .modal-header button.close {
+            width: 40px;
+            height: 40px;
+        }
+
         .card {
             border-radius: 0 !important;
         }
@@ -513,6 +536,13 @@
                                                 <i class="bi bi-printer"></i> {{__('cashier_sessions.titles.pos_devices')}}
                                             </a>
                                         </li>
+                                        @if(Auth::user()->hasRole('admin') || Auth::user()->hasPermission('manage_users'))
+                                        <li class="nav-item">
+                                            <a class="nav-link {{ request()->is('settings/roles*') || request()->is('roles*') ? 'active' : '' }}" href="{{ route('roles.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-shield-lock"></i> الأدوار
+                                            </a>
+                                        </li>
+                                        @endif
                                         <li class="nav-item">
                                             <a class="nav-link {{ request()->is('printers*') ? 'active' : '' }}" href="{{ route('printers.index') }}" style="padding:6px 16px; font-size:13px;">
                                                 <i class="bi bi-printer-fill"></i> {{__('cashier_sessions.titles.printers')}}
