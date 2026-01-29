@@ -43,6 +43,7 @@
         [dir=rtl] .input-group .form-select:first-child {
             border-radius: 0 0.6rem 0.6rem 0 !important;
         }
+
         [dir=rtl] .input-group .input-group-text:last-child,
         [dir=rtl] .input-group .form-control:last-child,
         [dir=rtl] .input-group .form-select:last-child {

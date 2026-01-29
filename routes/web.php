@@ -19,6 +19,9 @@ use App\Http\Controllers\PosDeviceController;
 use App\Http\Controllers\PosStationController;
 use App\Http\Controllers\PrinterController;
 use App\Http\Controllers\PrinterSettingsController;
+use App\Http\Controllers\ReportTemplateController;
+use App\Http\Controllers\ReportThemeController;
+use App\Http\Controllers\ReportComponentController;
 use App\Http\Controllers\RoleController;
 
 // Language Switch
@@ -228,6 +231,23 @@ Route::prefix('settings')->middleware('auth')->group(function () {
     Route::resource('roles', RoleController::class);
     Route::resource('permissions', PermissionController::class);
     Route::resource('pos-stations', PosStationController::class);
+
+    // Report Components Management
+    Route::resource('report-components', ReportComponentController::class);
+    Route::get('/report-components/{reportComponent}/duplicate', [ReportComponentController::class, 'duplicate'])->name('report-components.duplicate');
+    Route::post('/report-components/{reportComponent}/preview', [ReportComponentController::class, 'preview'])->name('report-components.preview');
+    Route::get('/api/report-components/available', [ReportComponentController::class, 'availableComponents'])->name('report-components.available');
+
+    // Report Templates Management
+    Route::resource('report-templates', ReportTemplateController::class);
+    Route::get('/report-templates/{reportTemplate}/duplicate', [ReportTemplateController::class, 'duplicate'])->name('report-templates.duplicate');
+    Route::get('/report-templates/{reportTemplate}/preview', [ReportTemplateController::class, 'preview'])->name('report-templates.preview');
+    Route::get('/report-templates/{reportTemplate}/customize', [ReportTemplateController::class, 'customize'])->name('report-templates.customize');
+
+    // Report Themes Management
+    Route::resource('report-themes', ReportThemeController::class);
+    Route::get('/report-themes/{reportTheme}/duplicate', [ReportThemeController::class, 'duplicate'])->name('report-themes.duplicate');
+    Route::get('/report-themes/{reportTheme}/preview', [ReportThemeController::class, 'preview'])->name('report-themes.preview');
 });
 
 // Assign roles to users

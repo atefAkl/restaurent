@@ -68,6 +68,38 @@
         </div>
     </div>
 
+    <!-- Reports & Templates Section -->
+    <div class="card settings-group-card mb-3">
+        <div class="card-header">
+            <h6 class="text-muted mb-3">التقارير والقوالب</h6>
+        </div>
+        <div class="card-body">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                            التقارير والقوالب
+                        </h6>
+                        <div class="d-grid gap-2">
+                            <a href="{{ route('report-components.index') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-puzzle me-2"></i>مكونات التقارير
+                            </a>
+                            <a href="{{ route('report-templates.index') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-file-earmark me-2"></i>قوالب التقارير
+                            </a>
+                            <a href="{{ route('report-themes.index') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-palette me-2"></i>ثيمات التقارير
+                            </a>
+                            <a href="{{ route('printer-settings.index') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-printer me-2"></i>إعدادات الطباعة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- User Management Section -->
     <div class="card settings-group-card mb-3">
