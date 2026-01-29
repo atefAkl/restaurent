@@ -34,7 +34,7 @@ return [
         'device_type' => 'نوع الجهاز',
         'connection_status' => 'حالة الاتصال',
         'connected' => 'متصل',
-        'disconnected' => 'منفصل',
+        'disconnected' => 'غير متصل',
         'test_connection' => 'اختبار الاتصال',
         'assign_device' => 'تعيين جهاز',
         'printer_name' => 'اسم الطابعة',

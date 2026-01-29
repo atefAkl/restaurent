@@ -4,14 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\Blameable;
 
 class PosDevice extends Model
 {
-    use HasFactory;
+    use HasFactory, Blameable;
 
     protected $fillable = [
         'name',
         'type',
+        'connection_type',
+        'device_id',
         'ip_address',
         'port',
         'location',
@@ -70,14 +73,14 @@ class PosDevice extends Model
     {
         // Simulate connection test
         $startTime = microtime(true);
-        
+
         // Here you would implement actual connection test logic
         // For now, we'll simulate with random success/failure
         $success = rand(0, 1) === 1;
-        
+
         $endTime = microtime(true);
         $responseTime = round(($endTime - $startTime) * 1000);
-        
+
         if ($success) {
             $this->update([
                 'is_online' => true,
@@ -90,7 +93,7 @@ class PosDevice extends Model
                 'response_time' => null,
             ]);
         }
-        
+
         return $success;
     }
 
@@ -99,9 +102,15 @@ class PosDevice extends Model
         if (!$this->is_online) {
             return false;
         }
-        
+
         // Here you would implement actual printing logic
         // For now, we'll simulate successful printing
         return true;
+    }
+
+    // Relationships
+    public function posStations()
+    {
+        return $this->belongsToMany(PosStation::class, 'pos_station_device');
     }
 }

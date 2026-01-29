@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CashierSession;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

@@ -72,7 +72,7 @@
             <h5 class="card-title">البائعين</h5>
             <ul>
                 @foreach($sellers as $seller)
-                    <li>{{ $seller->name }} ({{ $seller->email }})</li>
+                <li>{{ $seller->name }} ({{ $seller->email }})</li>
                 @endforeach
             </ul>
         </div>

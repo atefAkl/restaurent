@@ -116,14 +116,14 @@
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="viewSessionDetails({{ $session->id }})">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" data-session-id="{{$session->id}}" onclick="viewSessionDetails(this.dataset.sessionId)">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="printSessionReport({{ $session->id }})">
+                                    <button type="button" class="btn btn-outline-info btn-sm" data-session-id="{{$session->id}}" onclick="printSessionReport(this.dataset.sessionId)">
                                         <i class="bi bi-printer"></i>
                                     </button>
                                     @if($session->status == 'active')
-                                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="endSession({{ $session->id }})">
+                                    <button type="button" class="btn btn-outline-warning btn-sm" data-session-id="{{$session->id}}" onclick="endSession(this.dataset.sessionId)">
                                         <i class="bi bi-stop-circle"></i>
                                     </button>
                                     @endif

@@ -50,6 +50,7 @@
             background-color: var(--light-color);
             color: var(--dark-color);
             transition: var(--transition);
+            scroll-behavior: smooth;
         }
 
         /* Touch Screen Mode */
@@ -108,7 +109,7 @@
             border-radius: 0.25rem 0 0 0.25rem;
         }
 
-        [dir="rtl"] .form-floating > label {
+        [dir="rtl"] .form-floating>label {
             left: auto;
             right: 16px;
         }
@@ -141,6 +142,24 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             border: none;
             padding: 1rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Add padding to body to avoid content being hidden under fixed navbar */
+        body {
+            padding-top: 70px;
+        }
+
+        /* Adjust for touch mode */
+        body.touch-mode {
+            padding-top: 80px;
         }
 
         .navbar-brand {
@@ -161,6 +180,27 @@
         .navbar-nav .nav-link.active {
             background-color: rgba(255, 255, 255, 0.1);
             color: white !important;
+        }
+
+        /* Ensure dropdowns appear above fixed navbar */
+        .dropdown-menu {
+            z-index: 1031;
+            position: absolute;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.75rem 0;
+            }
+
+            body {
+                padding-top: 60px;
+            }
+
+            body.touch-mode {
+                padding-top: 70px;
+            }
         }
 
         .dropdown-item.active {
@@ -372,9 +412,16 @@
                 </a>
 
                 <div class="navbar-nav ms-auto">
+                    <!-- Printer Settings Quick Access -->
+                    <a href="{{ route('printer-settings.index') }}" class="btn btn-outline-light btn-sm me-2" title="إعدادات الطباعة">
+                        <i class="bi bi-printer"></i>
+                        <span class="d-none d-md-inline">الطباعة</span>
+                    </a>
+
                     <!-- Touch Mode Toggle -->
                     <button class="btn btn-outline-light btn-sm me-2" onclick="toggleTouchMode()" title="تبديل وضع شاشات اللمس">
                         <i class="bi bi-hand-index"></i>
+                        <span class="d-none d-md-inline">لمس</span>
                     </button>
 
                     <!-- Language Dropdown -->
@@ -463,6 +510,12 @@
                                 </a>
                             </li>
                             @endif
+                            <!-- Printer Settings -->
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('printer-settings.index') ? 'active' : '' }}" href="{{ route('printer-settings.index') }}" style="padding:8px 18px; font-size:14px;">
+                                    <i class="bi bi-printer"></i> إعدادات الطباعة
+                                </a>
+                            </li>
                             <!-- Sales/Financials Dropdown -->
                             <li class="nav-item">
                                 <a class="nav-link d-flex justify-content-between align-items-center collapsed" data-bs-toggle="collapse" href="#salesMenu" role="button" aria-expanded="{{ request()->is('shifts*') || request()->is('expenses*') ? 'true' : 'false' }}" aria-controls="salesMenu" style="padding:8px 18px; font-size:14px;">
@@ -514,42 +567,15 @@
                                 <div class="collapse {{ request()->is('settings/*') ? 'show' : '' }}" id="settingsMenu">
                                     <ul class="nav flex-column ms-2" style="border-right:2px solid #e5e7eb;">
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}" href="{{ route('rooms.index') }}" style="padding:6px 16px; font-size:13px;">
-                                                <i class="bi bi-door-open"></i> {{__('app.sidebar.rooms')}}
+                                            <a class="nav-link {{ request()->routeIs('settings.index') ? 'active' : '' }}" href="{{ route('settings.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-door-open"></i> {{__('app.sidebar.home')}}
                                             </a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link {{ request()->routeIs('tables.*') ? 'active' : '' }}" href="{{ route('tables.index') }}" style="padding:6px 16px; font-size:13px;">
-                                                <i class="bi bi-table"></i> {{__('app.sidebar.tables')}}
+                                            <a class="nav-link {{ request()->routeIs('printer-settings.index') ? 'active' : '' }}" href="{{ route('printer-settings.index') }}" style="padding:6px 16px; font-size:13px;">
+                                                <i class="bi bi-printer"></i> {{__('app.sidebar.printer_settings')}}
                                             </a>
                                         </li>
-                                        @if(Auth::user()->canManageCashierSessions())
-                                        <li class="nav-item">
-                                            <a class="nav-link {{ request()->is('cashier-sessions*') ? 'active' : '' }}" href="{{ route('cashier-sessions.index') }}" style="padding:6px 16px; font-size:13px;">
-                                                <i class="bi bi-cash-stack"></i> {{__('cashier_sessions.titles.cashier_sessions')}}
-                                            </a>
-                                        </li>
-                                        @endif
-                                        @if(Auth::user()->canManageSettings())
-                                        <li class="nav-item">
-                                            <a class="nav-link {{ request()->is('pos-devices*') ? 'active' : '' }}" href="{{ route('pos-devices.index') }}" style="padding:6px 16px; font-size:13px;">
-                                                <i class="bi bi-printer"></i> {{__('cashier_sessions.titles.pos_devices')}}
-                                            </a>
-                                        </li>
-                                        @if(Auth::user()->hasRole('admin') || Auth::user()->hasPermission('manage_users'))
-                                        <li class="nav-item">
-                                            <a class="nav-link {{ request()->is('settings/roles*') || request()->is('roles*') ? 'active' : '' }}" href="{{ route('roles.index') }}" style="padding:6px 16px; font-size:13px;">
-                                                <i class="bi bi-shield-lock"></i> الأدوار
-                                            </a>
-                                        </li>
-                                        @endif
-                                        <li class="nav-item">
-                                            <a class="nav-link {{ request()->is('printers*') ? 'active' : '' }}" href="{{ route('printers.index') }}" style="padding:6px 16px; font-size:13px;">
-                                                <i class="bi bi-printer-fill"></i> {{__('cashier_sessions.titles.printers')}}
-                                            </a>
-                                        </li>
-                                        @endif
-                                        <!-- أضف روابط إعدادات أخرى هنا -->
                                     </ul>
                                 </div>
                             </li>
@@ -571,25 +597,27 @@
                             @endif
                         </ul>
                     </div>
+                    @endif
                 </nav>
-                @endif
+
 
                 <!-- Main Content -->
                 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                    <!-- Hidden session messages for toast system -->
                     @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show fade-in" role="alert">
-                        <i class="bi bi-check-circle"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                    <div data-session-success="{{ session('success') }}"></div>
                     @endif
 
                     @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show fade-in" role="alert">
-                        <i class="bi bi-exclamation-circle"></i>
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                    <div data-session-error="{{ session('error') }}"></div>
+                    @endif
+
+                    @if(session('warning'))
+                    <div data-session-warning="{{ session('warning') }}"></div>
+                    @endif
+
+                    @if(session('info'))
+                    <div data-session-info="{{ session('info') }}"></div>
                     @endif
 
                     @yield('content')
@@ -606,9 +634,12 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <link rel="stylesheet" href="{{ asset('css/toast-styles.css') }}">
+    <script src="{{ asset('js/toast-system.js') }}"></script>
 
     @stack('scripts')
 
+    <script src="{{ asset('js/lang/'.app()->getLocale().'/app.js') }}"></script>
     <script>
         // Touch Mode Toggle
         function toggleTouchMode() {
@@ -622,35 +653,102 @@
             }
         }
 
-        // Notification System
-        function showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            notification.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
 
-            // Add to body
-            document.body.appendChild(notification);
+        // Initialize translation helper
+        window.t = function(key, params = {}) {
+            if (!window.lang) {
+                console.warn('Language data not loaded yet, returning key:', key);
+                return key;
+            }
 
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
+            const keys = key.split('.');
+            let value = window.lang;
+
+            for (const k of keys) {
+                if (value && typeof value === 'object' && k in value) {
+                    value = value[k];
+                } else {
+                    return key; // Return key if not found
                 }
-            }, 5000);
-        }
+            }
+
+            // Replace parameters in the string
+            if (typeof value === 'string') {
+                for (const [param, replacement] of Object.entries(params)) {
+                    value = value.replace(`:${param}`, replacement);
+                }
+            }
+
+            return value || key;
+        };
+
+        // Make lang available globally
+        window.appLang = window.lang;
+
+
+
+        // Trigger event when language is ready
+        window.dispatchEvent(new CustomEvent('languageLoaded'));
 
         // Initialize touch mode from localStorage
         if (localStorage.getItem('touchMode') === 'true') {
             document.body.classList.add('touch-mode');
         }
+
+        // Common AJAX functions
+        function showLoading() {
+            // Show loading spinner
+        }
+
+        function hideLoading() {
+            // Hide loading spinner
+        }
+
+        function showAlert(message, type = 'success') {
+            // Use toast system instead of alerts
+            if (window.toastSystem) {
+                window.toastSystem.show(message, type, 5000);
+            } else {
+                // Fallback to console if toast system not loaded
+                console.warn(`[${type.toUpperCase()}] ${message}`);
+            }
+        }
+
+        // Replace old showNotification with showToast
+        window.showNotification = window.showToast;
     </script>
 
-    @yield('scripts')
+
+    <script>
+        // Load language JSON based on current locale
+
+
+        // Helper function to get translation key
+        window.t = function(key, params = {}) {
+            const keys = key.split('.');
+            let value = window.lang;
+
+            for (const k of keys) {
+                if (value && typeof value === 'object' && k in value) {
+                    value = value[k];
+                } else {
+                    return key; // Return key if not found
+                }
+            }
+
+            // Replace parameters in the string
+            if (typeof value === 'string') {
+                for (const [param, replacement] of Object.entries(params)) {
+                    value = value.replace(`:${param}`, replacement);
+                }
+            }
+
+            return value || key;
+        };
+
+        // Make lang available globally
+        window.appLang = window.lang;
+    </script>
 </body>
 
 </html>

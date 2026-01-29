@@ -24,17 +24,21 @@ class Printer extends Model
         'description',
         'is_active',
         'is_online',
+        'is_default',
         'total_prints',
         'last_used',
         'settings',
+        'printer_settings',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'is_online' => 'boolean',
+        'is_default' => 'boolean',
         'total_prints' => 'integer',
         'last_used' => 'datetime',
         'settings' => 'array',
+        'printer_settings' => 'array',
     ];
 
     public function isActive()
@@ -62,7 +66,7 @@ class Printer extends Model
             'regular' => 'ورق عادي',
             'cashier' => 'ورق كاشير',
         ];
-        
+
         return $labels[$this->paper_type] ?? $this->paper_type;
     }
 
@@ -73,7 +77,7 @@ class Printer extends Model
             'medium' => 'متوسطة',
             'high' => 'عالية',
         ];
-        
+
         return $labels[$this->print_density] ?? $this->print_density;
     }
 
@@ -96,7 +100,7 @@ class Printer extends Model
     {
         // Simulate connection test
         $success = rand(0, 1) === 1;
-        
+
         if ($success) {
             $this->update([
                 'is_online' => true,
@@ -107,7 +111,7 @@ class Printer extends Model
                 'is_online' => false,
             ]);
         }
-        
+
         return $success;
     }
 
@@ -116,12 +120,12 @@ class Printer extends Model
         if (!$this->is_online) {
             return false;
         }
-        
+
         // Here you would implement actual printing logic
         // For now, we'll simulate successful printing
         $this->increment('total_prints');
         $this->update(['last_used' => now()]);
-        
+
         return true;
     }
 
@@ -130,12 +134,12 @@ class Printer extends Model
         if (!$this->is_online || !$this->is_active) {
             return false;
         }
-        
+
         // Here you would implement actual printing logic
         // For now, we'll simulate successful printing
         $this->increment('total_prints');
         $this->update(['last_used' => now()]);
-        
+
         return true;
     }
 }

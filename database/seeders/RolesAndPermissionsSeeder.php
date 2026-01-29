@@ -11,11 +11,48 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create roles
-        $admin = Role::firstOrCreate(['name' => 'admin'], ['display_name' => 'Administrator']);
-        $accountant = Role::firstOrCreate(['name' => 'accountant'], ['display_name' => 'Accountant']);
-        $seller = Role::firstOrCreate(['name' => 'seller'], ['display_name' => 'Seller']);
-        $kitchen = Role::firstOrCreate(['name' => 'kitchen'], ['display_name' => 'Kitchen']);
+        // Get first user ID for created_by/updated_by fields
+        $creatorId = User::first()->id;
+
+        // Temporarily set auth user for the Blameable trait
+        \Illuminate\Support\Facades\Auth::loginUsingId($creatorId);
+
+        // Create roles with proper firstOrCreate syntax
+        $admin = Role::firstOrCreate(
+            ['name' => 'admin'],
+            [
+                'display_name' => 'Administrator',
+                'created_by' => $creatorId,
+                'updated_by' => $creatorId
+            ]
+        );
+
+        $accountant = Role::firstOrCreate(
+            ['name' => 'accountant'],
+            [
+                'display_name' => 'Accountant',
+                'created_by' => $creatorId,
+                'updated_by' => $creatorId
+            ]
+        );
+
+        $seller = Role::firstOrCreate(
+            ['name' => 'seller'],
+            [
+                'display_name' => 'Seller',
+                'created_by' => $creatorId,
+                'updated_by' => $creatorId
+            ]
+        );
+
+        $kitchen = Role::firstOrCreate(
+            ['name' => 'kitchen'],
+            [
+                'display_name' => 'Kitchen',
+                'created_by' => $creatorId,
+                'updated_by' => $creatorId
+            ]
+        );
 
         // Example permissions
         $permissions = [
@@ -28,7 +65,13 @@ class RolesAndPermissionsSeeder extends Seeder
         ];
 
         foreach ($permissions as $perm) {
-            Permission::firstOrCreate(['name' => $perm]);
+            Permission::firstOrCreate(
+                ['name' => $perm],
+                [
+                    'created_by' => $creatorId,
+                    'updated_by' => $creatorId
+                ]
+            );
         }
 
         // Attach permissions to roles (basic mapping)

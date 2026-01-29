@@ -14,8 +14,12 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CashierSessionController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PosDeviceController;
+use App\Http\Controllers\PosStationController;
 use App\Http\Controllers\PrinterController;
+use App\Http\Controllers\PrinterSettingsController;
+use App\Http\Controllers\RoleController;
 
 // Language Switch
 Route::get('locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
@@ -47,6 +51,7 @@ Route::get('/orders/items/{item}/destroy', [OrderItemController::class, 'destroy
 
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/users', [UserController::class, 'addItems'])->name('orders.add-items');
+    Route::get('/index', [UserController::class, 'index'])->name('users.index');
 });
 
 // Clients Routes
@@ -188,26 +193,41 @@ Route::prefix('api')->middleware('auth')->group(function () {
     });
 });
 
+// POS Devices management
+Route::resource('pos-devices', App\Http\Controllers\PosDeviceController::class);
+
+// API Routes for POS Devices
+Route::prefix('api/pos-devices')->group(function () {
+    Route::get('/discover', [App\Http\Controllers\Api\PosDeviceController::class, 'discover']);
+    Route::post('/test-connection', [App\Http\Controllers\Api\PosDeviceController::class, 'testConnection']);
+    Route::get('/{deviceId}/info', [App\Http\Controllers\Api\PosDeviceController::class, 'getDeviceInfo']);
+    Route::post('/{deviceId}/send-command', [App\Http\Controllers\Api\PosDeviceController::class, 'sendCommand']);
+    Route::get('/ports/common', [App\Http\Controllers\Api\PosDeviceController::class, 'getCommonPorts']);
+});
+
 // // Fallback Route
 // Route::fallback(function () {
 //     return response()->view('errors.404', [], 404);
-// });
+// Printers resource routes
+Route::resource('printers', PrinterController::class)->middleware('auth');
+Route::post('/printers/test-connection', [PrinterController::class, 'testConnection'])->middleware('auth');
+Route::post('/printers/{id}/print-test', [PrinterController::class, 'printTestPage'])->middleware('auth');
 
-// Users resource routes
-Route::resource('users', UserController::class)->middleware('auth');
+// Printer settings routes
+Route::get('/printer-settings', [PrinterSettingsController::class, 'index'])->name('printer-settings.index')->middleware('auth');
+Route::post('/printer-settings/update', [PrinterSettingsController::class, 'update'])->name('printer-settings.update')->middleware('auth');
+Route::get('/printer-settings/get', [PrinterSettingsController::class, 'getSettings'])->name('printer-settings.get')->middleware('auth');
+Route::post('/printer-settings/test-receipt', [PrinterSettingsController::class, 'testReceipt'])->name('printer-settings.test-receipt')->middleware('auth');
 
-// Roles management
-use App\Http\Controllers\RoleController;
-
+// Settings main page
 Route::prefix('settings')->middleware('auth')->group(function () {
+    Route::get('/index', function () {
+        return view('settings.index');
+    })->name('settings.index');
+
     Route::resource('roles', RoleController::class);
-});
-
-// Permissions management
-use App\Http\Controllers\PermissionController;
-
-Route::prefix('settings')->middleware('auth')->group(function () {
     Route::resource('permissions', PermissionController::class);
+    Route::resource('pos-stations', PosStationController::class);
 });
 
 // Assign roles to users

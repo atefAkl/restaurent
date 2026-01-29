@@ -559,20 +559,7 @@
 
         // Show notification function
         function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `alert alert-${type} position-fixed shadow-lg`;
-            notification.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px; animation: slideDown 0.3s ease-out;';
-            notification.innerHTML = `
-            <div class="d-flex align-items-center justify-content-between">
-                <span>${message}</span>
-                <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
-            </div>
-        `;
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+            showToast(message, type);
         }
 
         // Hide search results when clicking outside
