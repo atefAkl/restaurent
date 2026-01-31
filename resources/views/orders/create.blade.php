@@ -5,72 +5,29 @@
 @section('content')
 
 <div class="container-fluid">
+    <!-- Auto-save status toast (hidden by default) -->
+    <div id="autoSaveStatus" class="position-fixed" style="top:80px; right:20px; z-index:3000; display:none; min-width:220px;">
+        <div id="autoSaveStatusInner" class="alert alert-info mb-0" role="alert">
+            جاري الحفظ...
+        </div>
+    </div>
     <style>
         .text-start {
             text-align: left;
+        }
+
+        .order-meals-item {
+            width: 120px;
+            height: 120px;
+            margin: 0.5rem;
+            cursor: pointer;
         }
 
         [dir=rtl] .text-start {
             text-align: right;
         }
 
-        .text-sm {
-            font-size: 0.875rem !important;
-        }
-
-        .order-meals-item .card {
-            width: 130px;
-            height: 100px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .order-meals-item .card p.meal-price,
-        .order-meals-item .card p.meal-name {
-            display: block;
-            position: absolute;
-            top: 0;
-            color: #fff;
-            height: 100%;
-            width: 100%;
-            font-weight: bold;
-        }
-
-        .order-meals-item .card p.meal-name {
-            background-color: #3d3e3dcc;
-            text-align: center;
-            padding: 1rem 0.5rem;
-        }
-
-        .order-meals-item .card p.meal-price {
-            padding: 4rem 0.5rem;
-            text-align: end;
-        }
-
-
-        .update-order-item-form input,
-        .update-order-item-form button,
-        .update-order-item-form select,
-        .update-order-item-form label {
-            height: 3rem;
-            text-align: center;
-            margin: 0;
-            font: normal 10px/1.2rem Cairo;
-            border-radius: 0.6rem
-        }
-
-        .order-types {
-            display: flex;
-            justify-content: start;
-            gap: 2px;
-        }
-
-        .order-types .btn {
-            margin: 1px 1px 0.6rem;
-            border-radius: 0.6rem;
-            padding: 0.25rem 1rem;
-        }
-
+        
         .order-types .btn:first-of-type {
             margin-inline-start: 1rem;
         }
@@ -98,6 +55,31 @@
 
         .customer-result-item {
             transition: all 0.2s ease;
+        }
+        
+        .order-meals-item .card {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .order-meals-item .card .meal-name,
+        .order-meals-item .card .meal-price {
+            position: absolute;
+            color: #fff;
+        }
+        .order-meals-item .card .meal-name {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding-top: 1.5rem;
+            font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        .order-meals-item .card .meal-price {
+            background-color: transparent;
+            bottom: 0.5rem;
+            text-align: center;
         }
 
         .customer-result-item:hover {
@@ -213,6 +195,7 @@
                     </form>
                 </div>
                 @endforeach
+                <pre>{{$order}}</pre>
                 {{-- <div class="order-meals-item p-1">
                     <div class="card " style="">
                         <a href="{{route('products.create', ['category_id' => $active_category])}}" class="w-100 h-100 d-flex flex-column justify-content-center align-items-center" style="background-color: #333c; color: #fff; text-decoration: none;">
@@ -249,9 +232,6 @@
     @endforelse
     @if ($orderItems->count() > 0)
     <h4 class="bg-secondary text-white text-center py-1">{{ __('orders.titles.client_information') }}</h4>
-    <form action="{{route('orders.update', $order->id)}}" method="POST" id="orderForm">
-        @csrf
-        @method('PUT')
         <div class="order-types">
             <input type="radio" name="order_type" id="away" value="away" style="display: none;" checked>
             <label for="away" class="btn btn-outline-primary">{{ __('orders.labels.order_type_away') }}</label>
@@ -264,8 +244,12 @@
         </div>
 
         <div class="inputs border border-primary p-3"
-            style="margin-top: -2px; background-color: #ebebebff; border-radius: 0.6rem;">
-            <!-- Customer Search with Autocomplete -->
+                style="margin-top: -2px; background-color: #ebebebff; border-radius: 0.6rem;">
+                <!-- Customer Search with Autocomplete -->
+                <form action="{{route('orders.update', $order->id)}}" method="POST" id="clientUpdateForm">
+                    @csrf
+                    @method('PUT')
+                    <div id="clientForm">
             <div class="mb-2">
                 <label for="customerSearch" class="form-label fw-bold">
                     <i class="bi bi-search"></i> {{__('orders.labels.customer_search')}}
@@ -282,32 +266,38 @@
                     </div>
                 </div>
                 <small class=""><i class="bi bi-info-circle"></i> {{__('orders.hints.customer_search_hint')}}</small>
+
             </div>
 
             <div class="input-group mb-1" id="client_name_group">
                 <label for="client_name" class="input-group-text">{{__('orders.labels.customer_name')}}</label>
-                <input type="hidden" name="client_id" id="client_id" value="{{ old('client_id') }}">
-                <input type="text" name="client_name" id="client_name" class="form-control" value="{{ old('client_name') }}" placeholder="اسم العميل">
+                <input type="hidden" name="client_id" id="client_id" value="{{ old('client_id', $order->customer_id) }}">
+                <input type="text" name="client_name" id="client_name" class="form-control" value="{{ old('client_name', $order->customer_name) }}" placeholder="اسم العميل">
             </div>
 
             <div class="input-group mb-1" id="phone_group">
                 <label for="phone" class="input-group-text">{{__('orders.labels.phone')}}</label>
-                <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}" placeholder="رقم الهاتف">
+                <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone', $order->customer_phone) }}" placeholder="رقم الهاتف">
             </div>
 
             <div class="input-group mb-1" id="address_group">
                 <label for="address" class="input-group-text">{{__('orders.labels.address')}}</label>
-                <input type="text" name="address" id="address" class="form-control" value="{{ old('address') }}">
+                <input type="text" name="address" id="address" class="form-control" value="{{ old('address', $order->customer_address) }}">
             </div>
 
             <div class="input-group mb-1" id="table_id_group">
                 <label for="table_id" class="input-group-text">{{__('orders.labels.table_or_room')}}</label>
-                <input type="text" name="table_id" id="table_id" class="form-control" value="{{ old('table_id') }}">
+                <input type="text" name="table_id" id="table_id" class="form-control" value="{{ old('table_id', $order->room_number) }}">
             </div>
+                </div>
+            </form>
         </div>
 
         <!-- Payment Methods Section -->
-        <div class="payment-section mt-3">
+        <form action="{{route('orders.update', $order->id)}}" method="POST" id="paymentUpdateForm">
+            @csrf
+            @method('PUT')
+            <div id="paymentForm" class="payment-section mt-3">
             <h4 class="bg-secondary text-white text-center py-1">{{ __('orders.titles.payment_methods') }}</h4>
             <div class="order-types">
                 <input type="radio" name="payment_method" id="payment_cash" value="cash" style="display: none;">
@@ -446,8 +436,9 @@
                     </div>
                 </div>
 
+                </div>
             </div>
-    </form>
+        </form>
     @endif
 </div>
 
@@ -555,6 +546,14 @@
                 customerNameInput.classList.remove('border-success', 'border-3');
                 customerPhoneInput.classList.remove('border-success', 'border-3');
             }, 2000);
+
+            // Persist selection immediately to order (AJAX) using client form
+            ajaxUpdateOrder({
+                client_id: client.id,
+                client_name: client.name,
+                phone: client.phone,
+                address: document.getElementById('address').value || ''
+            }, 'clientUpdateForm').catch(() => { /* ignore errors here */ });
         }
 
         // Show notification function
@@ -741,6 +740,12 @@
                 if (this.checked) {
                     updatePaymentFields(this.value);
                     calculateOrderTotals(); // Recalculate when payment method changes
+
+                    // Persist selected payment method immediately (payment form)
+                    ajaxUpdateOrder({
+                        payment_method: this.value,
+                        paid_amount: document.getElementById('paid_amount').value || 0
+                    }, 'paymentUpdateForm').catch(() => { /* ignore */ });
                 }
             });
         });
@@ -820,14 +825,187 @@
                 return;
             }
 
-            showNotification('🔄 جاري حفظ الطلب وطباعته...', 'info');
+            // Validate before saving/printing
+            const validation = validateOrderForPayment();
+            if (!validation.ok) {
+                showNotification(validation.message, 'warning');
+                if (validation.focus) try { document.getElementById(validation.focus).focus(); } catch(e) {}
+                return;
+            }
 
-            // Simulate save and print
-            setTimeout(() => {
-                showNotification('✅ تم حفظ الطلب وطباعته بنجاح!', 'success');
-                window.print(); // Open print dialog
-            }, 1500);
+            showNotification('🔄 جاري حفظ الطلب وفتح صفحة الطباعة...', 'info');
+            // Open a named print window synchronously to avoid popup blocking
+            const printWindow = window.open('', 'printWindow');
+            const printUrl = '{{ route("orders.print", $order->id) }}';
+
+            // Collect payment form data to save before printing
+            const paymentPayload = getPaymentPayload();
+
+            // Save payment data via AJAX, then load the print view in the opened window
+            ajaxUpdateOrder(paymentPayload, 'paymentUpdateForm').then(response => {
+                if (printWindow) {
+                    printWindow.location = printUrl;
+                } else {
+                    // Fallback: open in new tab
+                    window.open(printUrl, '_blank');
+                }
+                showNotification('✅ تم حفظ الطلب. جاري فتح صفحة الطباعة...', 'success');
+            }).catch(err => {
+                showNotification('❌ حدث خطأ أثناء حفظ الطلب. حاول مرة أخرى.', 'danger');
+                if (printWindow) printWindow.close();
+            });
         });
+
+        // CSRF token for AJAX
+        const csrfToken = '{{ csrf_token() }}';
+
+        // Auto-save status helpers
+        let autoSaveHideTimer = null;
+        function showAutoSaveStatus(message, type = 'info') {
+            const container = document.getElementById('autoSaveStatus');
+            const inner = document.getElementById('autoSaveStatusInner');
+            if (!container || !inner) return;
+            inner.textContent = message;
+            inner.className = 'alert mb-0';
+            if (type === 'success') inner.classList.add('alert-success');
+            else if (type === 'warning') inner.classList.add('alert-warning');
+            else if (type === 'danger' || type === 'error') inner.classList.add('alert-danger');
+            else inner.classList.add('alert-info');
+            container.style.display = 'block';
+            if (autoSaveHideTimer) clearTimeout(autoSaveHideTimer);
+        }
+
+        function hideAutoSaveStatus(delay = 1200) {
+            const container = document.getElementById('autoSaveStatus');
+            if (!container) return;
+            if (autoSaveHideTimer) clearTimeout(autoSaveHideTimer);
+            autoSaveHideTimer = setTimeout(() => {
+                container.style.display = 'none';
+            }, delay);
+        }
+
+        // AJAX helper to update order (returns a Promise)
+        // formId: optional id of the form to use for action URL (e.g. 'clientUpdateForm' or 'paymentUpdateForm')
+        function ajaxUpdateOrder(payload, formId = 'paymentUpdateForm') {
+            // show transient status
+            showAutoSaveStatus('جاري الحفظ...', 'info');
+            return new Promise((resolve, reject) => {
+                const form = document.getElementById(formId);
+                if (!form) {
+                    // If there's no order form (no items), still attempt to call update route
+                    const updateUrl = '{{ route("orders.update", $order->id) }}';
+                    const body = new URLSearchParams();
+                    body.append('_method', 'PUT');
+                    body.append('_token', csrfToken);
+                    for (const key in payload) {
+                        body.append(key, payload[key]);
+                    }
+
+                    fetch(updateUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: body
+                    }).then(response => response.text()).then(text => {
+                        try {
+                            const data = JSON.parse(text || '{}');
+                            hideAutoSaveStatus(800);
+                            try { window.showToast('✅ تم حفظ البيانات', 'success', 2500); } catch(e) {}
+                            resolve(data);
+                        } catch (errParse) {
+                            console.error('Non-JSON response from server:', text);
+                            hideAutoSaveStatus(800);
+                            try { window.showToast('❌ فشل الحفظ: استجابة غير صالحة', 'error', 4000); } catch(e) {}
+                            showAutoSaveStatus('❌ فشل الحفظ', 'danger');
+                            hideAutoSaveStatus(3000);
+                            reject(new Error('Non-JSON response'));
+                        }
+                    }).catch(err => {
+                        try { window.showToast('❌ فشل الحفظ', 'error', 3000); } catch(e) {}
+                        showAutoSaveStatus('❌ فشل الحفظ', 'danger');
+                        hideAutoSaveStatus(3000);
+                        reject(err);
+                    });
+                    return;
+                }
+
+                    const updateUrl = form.action;
+                const body = new FormData();
+                body.append('_method', 'PUT');
+                body.append('_token', csrfToken);
+                for (const key in payload) {
+                    body.append(key, payload[key]);
+                }
+
+                fetch(updateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: body
+                }).then(response => response.text()).then(text => {
+                    try {
+                        const data = JSON.parse(text || '{}');
+                        hideAutoSaveStatus(800);
+                        try { window.showToast('✅ تم حفظ البيانات', 'success', 2500); } catch(e) {}
+                        resolve(data);
+                    } catch (errParse) {
+                        console.error('Non-JSON response from server:', text);
+                        hideAutoSaveStatus(800);
+                        try { window.showToast('❌ فشل الحفظ: استجابة غير صالحة', 'error', 4000); } catch(e) {}
+                        showAutoSaveStatus('❌ فشل الحفظ', 'danger');
+                        hideAutoSaveStatus(3000);
+                        reject(new Error('Non-JSON response'));
+                    }
+                }).catch(error => {
+                    console.error('Error updating order:', error);
+                    try { window.showToast('❌ فشل الحفظ', 'error', 3000); } catch(e) {}
+                    showAutoSaveStatus('❌ فشل الحفظ', 'danger');
+                    hideAutoSaveStatus(3000);
+                    reject(error);
+                });
+            });
+        }
+
+        // Helper to build client payload
+        function getClientPayload() {
+            return {
+                client_id: document.getElementById('client_id') ? document.getElementById('client_id').value : '',
+                client_name: document.getElementById('client_name') ? document.getElementById('client_name').value : '',
+                phone: document.getElementById('phone') ? document.getElementById('phone').value : '',
+                address: document.getElementById('address') ? document.getElementById('address').value : '',
+                table_id: document.getElementById('table_id') ? document.getElementById('table_id').value : ''
+            };
+        }
+
+        // Helper to build payment payload
+        function getPaymentPayload() {
+            const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
+            return {
+                payment_method: selectedPaymentMethod ? selectedPaymentMethod.value : '',
+                paid_amount: document.getElementById('paid_amount') ? document.getElementById('paid_amount').value : 0,
+                bank_account: document.getElementById('bank_account') ? document.getElementById('bank_account').value : '',
+                pos_device: document.getElementById('pos_device') ? document.getElementById('pos_device').value : ''
+            };
+        }
+
+        // Debounced auto-save of client when interacting with payment fields
+        let clientAutoSaveTimeout = null;
+        const paymentFormEl = document.getElementById('paymentForm');
+        if (paymentFormEl) {
+            paymentFormEl.addEventListener('focusin', function(e) {
+                clearTimeout(clientAutoSaveTimeout);
+                clientAutoSaveTimeout = setTimeout(() => {
+                    const clientPayload = getClientPayload();
+                    if (clientPayload.client_name || clientPayload.client_id || clientPayload.phone) {
+                        ajaxUpdateOrder(clientPayload, 'clientUpdateForm').catch(() => { /* ignore */ });
+                    }
+                }, 350);
+            });
+        }
 
         // Initialize with default state (no payment fields shown)
         updatePaymentFields(null);
@@ -835,121 +1013,91 @@
         // Calculate initial totals
         calculateOrderTotals();
 
-        // Form validation before submission
-        const orderForm = document.getElementById('orderForm');
-        if (orderForm) {
-            orderForm.addEventListener('submit', function(e) {
-                const selectedOrderType = document.querySelector('input[name="order_type"]:checked');
+        // Reusable validation for order/payment before saving or submitting
+        function validateOrderForPayment() {
+            const selectedOrderType = document.querySelector('input[name="order_type"]:checked');
+            const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
+
+            if (!selectedOrderType) return { ok: false, message: '⚠️ يجب اختيار نوع الطلب أولاً!', focus: null };
+            if (!selectedPaymentMethod) return { ok: false, message: '⚠️ يجب اختيار طريقة الدفع أولاً!', focus: null };
+
+            const orderType = selectedOrderType.value;
+            const paymentMethod = selectedPaymentMethod.value;
+
+            if (orderType === 'local') {
+                const tableId = document.getElementById('table_id').value.trim();
+                if (!tableId) return { ok: false, message: '⚠️ رقم الغرفة مطلوب للطلبات المحلية!', focus: 'table_id' };
+            }
+
+            if (orderType === 'away') {
+                const phone = document.getElementById('phone').value.trim();
+                if (!phone) return { ok: false, message: '⚠️ رقم الهاتف مطلوب للطلبات السفرية!', focus: 'phone' };
+            }
+
+            if (orderType === 'delivery' || orderType === 'feast') {
+                const phone = document.getElementById('phone').value.trim();
+                const address = document.getElementById('address').value.trim();
+                if (!phone) return { ok: false, message: '⚠️ رقم الهاتف مطلوب لهذا النوع من الطلبات!', focus: 'phone' };
+                if (!address) return { ok: false, message: '⚠️ العنوان مطلوب لهذا النوع من الطلبات!', focus: 'address' };
+            }
+
+            if (orderType !== 'local') {
+                const customerName = document.getElementById('client_name').value.trim();
+                if (!customerName) return { ok: false, message: '⚠️ اسم العميل مطلوب!', focus: 'client_name' };
+            }
+
+            if (paymentMethod === 'bank_transfer') {
+                const receiptEl = document.getElementById('transfer_receipt');
+                const receipt = receiptEl ? receiptEl.files.length : 0;
+                const transferNumberEl = document.getElementById('transfer_number');
+                const transferNumber = transferNumberEl ? transferNumberEl.value.trim() : '';
+                if (!receipt) return { ok: false, message: '⚠️ يجب رفع صورة الإيصال!', focus: 'transfer_receipt' };
+                if (!transferNumber) return { ok: false, message: '⚠️ رقم التحويل مطلوب!', focus: 'transfer_number' };
+            }
+
+            if (paymentMethod === 'account') {
+                const balanceEl = document.getElementById('account_balance');
+                const balance = balanceEl ? parseFloat(balanceEl.value || 0) : 0;
+                const confirmDeductionEl = document.getElementById('confirm_account_deduction');
+                const confirmDeduction = confirmDeductionEl ? confirmDeductionEl.checked : false;
+                if (!balance || balance <= 0) return { ok: false, message: '⚠️ يجب تحديد المبلغ المراد خصمه!', focus: 'account_balance' };
+                if (!confirmDeduction) return { ok: false, message: '⚠️ يجب تأكيد الخصم من حساب العميل!', focus: null };
+            }
+
+            return { ok: true };
+        }
+
+        // Form validation before submission (payment form)
+        const paymentForm = document.getElementById('paymentUpdateForm');
+        if (paymentForm) {
+            paymentForm.addEventListener('submit', function(e) {
+                // Run reusable validation
+                const validation = validateOrderForPayment();
+                if (!validation.ok) {
+                    e.preventDefault();
+                    showNotification(validation.message, 'warning');
+                    if (validation.focus) try { document.getElementById(validation.focus).focus(); } catch(e) {}
+                    return;
+                }
+
                 const selectedPaymentMethod = document.querySelector('input[name="payment_method"]:checked');
-
-                if (!selectedOrderType) {
-                    e.preventDefault();
-                    showNotification('⚠️ يجب اختيار نوع الطلب أولاً!', 'warning');
-                    return;
-                }
-
-                if (!selectedPaymentMethod) {
-                    e.preventDefault();
-                    showNotification('⚠️ يجب اختيار طريقة الدفع أولاً!', 'warning');
-                    return;
-                }
-
-                const orderType = selectedOrderType.value;
-                const paymentMethod = selectedPaymentMethod.value;
-
-                // Validate order type fields
-                if (orderType === 'local') {
-                    const tableId = document.getElementById('table_id').value.trim();
-                    if (!tableId) {
-                        e.preventDefault();
-                        showNotification('⚠️ رقم الغرفة مطلوب للطلبات المحلية!', 'warning');
-                        document.getElementById('table_id').focus();
-                        return;
-                    }
-                }
-
-                if (orderType === 'away') {
-                    const phone = document.getElementById('phone').value.trim();
-                    if (!phone) {
-                        e.preventDefault();
-                        showNotification('⚠️ رقم الهاتف مطلوب للطلبات السفرية!', 'warning');
-                        document.getElementById('phone').focus();
-                        return;
-                    }
-                }
-
-                if (orderType === 'delivery' || orderType === 'feast') {
-                    const phone = document.getElementById('phone').value.trim();
-                    const address = document.getElementById('address').value.trim();
-
-                    if (!phone) {
-                        e.preventDefault();
-                        showNotification('⚠️ رقم الهاتف مطلوب لهذا النوع من الطلبات!', 'warning');
-                        document.getElementById('phone').focus();
-                        return;
-                    }
-
-                    if (!address) {
-                        e.preventDefault();
-                        showNotification('⚠️ العنوان مطلوب لهذا النوع من الطلبات!', 'warning');
-                        document.getElementById('address').focus();
-                        return;
-                    }
-                }
-
-                // Validate customer name for non-local orders
-                if (orderType !== 'local') {
-                    const customerName = document.getElementById('client_name').value.trim();
-                    if (!customerName) {
-                        e.preventDefault();
-                        showNotification('⚠️ اسم العميل مطلوب!', 'warning');
-                        document.getElementById('client_name').focus();
-                        return;
-                    }
-                }
-
-                // Validate payment method fields
-                if (paymentMethod === 'bank_transfer') {
-                    const receipt = document.getElementById('transfer_receipt').files.length;
-                    const transferNumber = document.getElementById('transfer_number').value.trim();
-
-                    if (!receipt) {
-                        e.preventDefault();
-                        showNotification('⚠️ يجب رفع صورة الإيصال!', 'warning');
-                        return;
-                    }
-
-                    if (!transferNumber) {
-                        e.preventDefault();
-                        showNotification('⚠️ رقم التحويل مطلوب!', 'warning');
-                        document.getElementById('transfer_number').focus();
-                        return;
-                    }
-                }
-
-                if (paymentMethod === 'account') {
-                    const balance = document.getElementById('account_balance').value;
-                    const confirmDeduction = document.getElementById('confirm_account_deduction').checked;
-
-                    if (!balance || balance <= 0) {
-                        e.preventDefault();
-                        showNotification('⚠️ يجب تحديد المبلغ المراد خصمه!', 'warning');
-                        document.getElementById('account_balance').focus();
-                        return;
-                    }
-
-                    if (!confirmDeduction) {
-                        e.preventDefault();
-                        showNotification('⚠️ يجب تأكيد الخصم من حساب العميل!', 'warning');
-                        return;
-                    }
-                }
+                const paymentMethod = selectedPaymentMethod ? selectedPaymentMethod.value : null;
 
                 if (paymentMethod === 'pos') {
                     e.preventDefault();
                     processPOSPayment();
                     return;
                 }
+
+                // Before final submit, save payment data via AJAX then submit to ensure server has latest payment fields
+                e.preventDefault();
+                const paymentPayload = getPaymentPayload();
+                ajaxUpdateOrder(paymentPayload, 'paymentUpdateForm').then(() => {
+                    // submit the payment form after payment saved
+                    paymentForm.submit();
+                }).catch(err => {
+                    showNotification('❌ فشل حفظ بيانات الدفع. حاول مرة أخرى.', 'danger');
+                });
             });
         }
 
@@ -965,8 +1113,9 @@
                 // For now, we'll simulate a successful payment
                 showNotification('✅ تم الدفع بنجاح عبر جهاز الصرافة!', 'success');
 
-                // Submit the form after successful POS payment
-                document.getElementById('orderForm').submit();
+                // Submit the payment form after successful POS payment
+                const pf = document.getElementById('paymentUpdateForm');
+                if (pf) pf.submit();
             }, 3000);
         }
 

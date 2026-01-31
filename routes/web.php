@@ -243,6 +243,10 @@ Route::prefix('settings')->middleware('auth')->group(function () {
     Route::get('/report-templates/{reportTemplate}/duplicate', [ReportTemplateController::class, 'duplicate'])->name('report-templates.duplicate');
     Route::get('/report-templates/{reportTemplate}/preview', [ReportTemplateController::class, 'preview'])->name('report-templates.preview');
     Route::get('/report-templates/{reportTemplate}/customize', [ReportTemplateController::class, 'customize'])->name('report-templates.customize');
+    Route::post('/report-templates/{reportTemplate}/save-customize', [ReportTemplateController::class, 'saveCustomize'])->name('report-templates.save-customize');
+    Route::get('/report-templates/{reportTemplate}/blocks', [ReportTemplateController::class, 'blocks'])->name('report-templates.blocks');
+    Route::post('/report-templates/{reportTemplate}/blocks', [ReportTemplateController::class, 'updateBlocks'])->name('report-templates.blocks.update');
+    Route::post('/report-templates/import-a4', [ReportTemplateController::class, 'importA4'])->name('report-templates.import-a4');
 
     // Report Themes Management
     Route::resource('report-themes', ReportThemeController::class);

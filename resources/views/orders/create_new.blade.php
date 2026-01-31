@@ -546,16 +546,28 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('discountAmount').addEventListener('input', updateOrderSummary);
     document.getElementById('paidAmount').addEventListener('input', updateRemainingAmount);
     
-    // Save and Print Button
+    // Save and Print Button: open a print window synchronously, then submit the form to that window
     document.getElementById('saveAndPrintBtn').addEventListener('click', function() {
+        // Open a new blank window synchronously to keep user gesture (avoids popup blocking)
+        const printWindow = window.open('', 'printWindow');
+
         // Add a hidden field to indicate we want to print
         const printInput = document.createElement('input');
         printInput.type = 'hidden';
         printInput.name = 'print_receipt';
         printInput.value = '1';
         document.getElementById('posForm').appendChild(printInput);
-        
-        document.getElementById('posForm').submit();
+
+        // Set form target to the opened window so the response loads there
+        const form = document.getElementById('posForm');
+        const previousTarget = form.target;
+        form.target = 'printWindow';
+
+        // Submit the form — response will open in the new window
+        form.submit();
+
+        // Restore target after a short delay
+        setTimeout(() => { form.target = previousTarget; }, 1000);
     });
     
     // Cancel Button

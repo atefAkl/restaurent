@@ -242,6 +242,19 @@
                 </div>
             </div>
 
+            <!-- Available Components -->
+            <div class="control-panel">
+                <div class="control-group">
+                    <h6>المكونات المتاحة</h6>
+                    <div class="mb-3">
+                        <input id="componentSearch" class="form-control form-control-sm" placeholder="ابحث عن مكون..." oninput="searchComponents(this.value)">
+                    </div>
+                    <div class="element-list" id="componentsList">
+                        <!-- Components will be populated here -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Properties Panel -->
             <div class="control-panel" id="propertiesPanel" style="display: none;">
                 <div class="control-group">
@@ -405,7 +418,10 @@ let dragOffset = { x: 0, y: 0 };
 document.addEventListener('DOMContentLoaded', function() {
     initializeCanvas();
     setupEventListeners();
+    loadAvailableComponents();
 });
+
+let availableComponents = {};
 
 function initializeCanvas() {
     const canvas = document.getElementById('previewCanvas');
@@ -716,11 +732,69 @@ function addElementToCanvas(elementData) {
     `;
     element.textContent = elementData.name;
     element.innerHTML += '<div class="resize-handle se"></div>';
+    // store metadata for server
+    element.dataset.type = elementData.type || 'text';
+    element.dataset.content = elementData.content || '';
     
     block.appendChild(element);
     makeDraggable(element);
     makeResizable(element);
     
+    showElementsForBlock(selectedBlock);
+}
+
+function loadAvailableComponents() {
+    (async () => {
+        try {
+            const url = '{{ route("report-components.available") }}';
+            const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!resp.ok) return;
+            const comps = await resp.json();
+            const list = document.getElementById('componentsList');
+            list.innerHTML = '';
+            comps.forEach(c => {
+                availableComponents[c.id] = c;
+                const item = document.createElement('div');
+                item.className = 'element-item';
+                item.onclick = () => addComponentToSelectedBlock(c.id);
+                item.innerHTML = `<div class="d-flex justify-content-between align-items-center"><span><i class="bi bi-puzzle me-2"></i>${c.name}</span><small class="text-muted">${c.type}</small></div>`;
+                list.appendChild(item);
+            });
+        } catch (e) {
+            console.error('Failed load components', e);
+        }
+    })();
+}
+
+function searchComponents(q) {
+    const lower = q.trim().toLowerCase();
+    const list = document.getElementById('componentsList');
+    Array.from(list.children).forEach(child => {
+        const text = child.textContent.trim().toLowerCase();
+        child.style.display = text.includes(lower) ? '' : 'none';
+    });
+}
+
+function addComponentToSelectedBlock(componentId) {
+    if (!selectedBlock) {
+        alert('الرجاء اختيار جزء أولاً');
+        return;
+    }
+
+    const comp = availableComponents[componentId];
+    if (!comp) return;
+
+    const elementData = {
+        name: comp.name,
+        type: comp.type,
+        content: JSON.stringify(comp.content_template || comp.content_template || ''),
+        width: 100,
+        height: 30,
+        position_x: 10,
+        position_y: 10
+    };
+
+    addElementToCanvas(elementData);
     showElementsForBlock(selectedBlock);
 }
 
@@ -808,38 +882,66 @@ function saveTemplate() {
     const templateData = {
         blocks: []
     };
-    
+
     document.querySelectorAll('.template-block').forEach(block => {
         const blockData = {
             id: block.dataset.blockId,
             name: block.querySelector('.template-block-header').textContent,
-            position_x: parseInt(block.style.left),
-            position_y: parseInt(block.style.top),
-            width: parseInt(block.style.width),
-            height: parseInt(block.style.height),
+            position_x: parseInt(block.style.left) || 0,
+            position_y: parseInt(block.style.top) || 0,
+            width: parseInt(block.style.width) || 0,
+            height: parseInt(block.style.height) || 0,
             elements: []
         };
-        
+
         block.querySelectorAll('.template-element').forEach(element => {
             blockData.elements.push({
                 id: element.dataset.elementId,
+                type: element.dataset.type || 'text',
                 name: element.textContent.trim(),
-                position_x: parseInt(element.style.left),
-                position_y: parseInt(element.style.top),
-                width: parseInt(element.style.width),
-                height: parseInt(element.style.height),
-                style: element.getAttribute('style')
+                content: element.dataset.content || '',
+                position_x: parseInt(element.style.left) || 0,
+                position_y: parseInt(element.style.top) || 0,
+                width: parseInt(element.style.width) || 0,
+                height: parseInt(element.style.height) || 0,
+                properties: {} // future: parse inline styles
             });
         });
-        
+
         templateData.blocks.push(blockData);
     });
-    
-    // Save to backend
-    console.log('Saving template data:', templateData);
-    
-    // Show success message
-    alert('تم حفظ التغييرات بنجاح!');
+
+    // Send to backend
+    (async () => {
+        try {
+            const url = '{{ route("report-templates.save-customize", $template) }}';
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(templateData)
+            });
+
+            const json = await resp.json();
+
+            if (resp.ok && json.success) {
+                alert(json.message || 'تم حفظ التغييرات بنجاح');
+                // reload to reflect saved layout (IDs/DB state)
+                location.reload();
+            } else {
+                console.error('Save failed', json);
+                alert('فشل حفظ التغييرات: ' + (json.message || resp.statusText));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('حدث خطأ أثناء الحفظ: ' + err.message);
+        }
+    })();
 }
 
 function resetTemplate() {

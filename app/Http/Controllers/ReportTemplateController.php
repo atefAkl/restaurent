@@ -8,6 +8,8 @@ use App\Models\TemplateBlock;
 use App\Models\ReportElement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
 
 class ReportTemplateController extends Controller
 {
@@ -191,6 +193,232 @@ class ReportTemplateController extends Controller
         $template = $reportTemplate->load(['theme', 'templateBlocks.reportElements']);
 
         return view('report-templates.customize', compact('template'));
+    }
+
+    /**
+     * Simple blocks visibility manager (show/hide).
+     */
+    public function blocks(PrintTemplate $reportTemplate)
+    {
+        $template = $reportTemplate->load(['templateBlocks']);
+        return view('report-templates.blocks', compact('template'));
+    }
+
+    public function updateBlocks(Request $request, PrintTemplate $reportTemplate)
+    {
+        $visible = $request->input('visible', []);
+
+        DB::beginTransaction();
+        try {
+            // Set all to false first
+            $reportTemplate->templateBlocks()->update(['is_visible' => false]);
+
+            if (is_array($visible) && !empty($visible)) {
+                $ids = array_map('intval', $visible);
+                $reportTemplate->templateBlocks()->whereIn('id', $ids)->update(['is_visible' => true]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('report-templates.blocks', $reportTemplate)->with('success', 'تم تحديث إظهار الأجزاء');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('updateBlocks error', ['template_id' => $reportTemplate->id, 'error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'حدث خطأ أثناء حفظ الحالة');
+        }
+    }
+
+    /**
+     * Import a4 blade file into a PrintTemplate with TemplateBlock fragments.
+     * This creates a template and splits the file into named blocks that can be shown/hidden.
+     */
+    public function importA4(Request $request)
+    {
+        $path = resource_path('views/print_templates/a4template.blade.php');
+        if (!File::exists($path)) {
+            return redirect()->back()->with('error', 'ملف القالب A4 غير موجود');
+        }
+
+        $content = File::get($path);
+
+        // Check if a template with this name already exists
+        $existing = PrintTemplate::where('name', 'A4 Template (file)')->first();
+        if ($existing) {
+            return redirect()->back()->with('info', 'قالب A4 مُسجّل بالفعل.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Create the template
+            $template = PrintTemplate::create([
+                'name' => 'A4 Template (file)',
+                'description' => 'Imported from resources/views/print_templates/a4template.blade.php',
+                'type' => 'invoice',
+                'content' => null,
+                'is_active' => true,
+                'is_default' => true,
+            ]);
+
+            // Define markers to extract blocks
+            $markers = [
+                'Header Section' => 'header',
+                'Details Grid (Client & Invoice Info)' => 'details',
+                'Products Table' => 'products_table',
+                'Summary & QR Code Section' => 'summary',
+                'Footer' => 'footer',
+            ];
+
+            // For each marker, find the section starting at the marker until next marker
+            $positions = [];
+            foreach ($markers as $label => $key) {
+                $needle = "<!-- $label -->";
+                $pos = strpos($content, $needle);
+                if ($pos !== false) {
+                    $positions[$pos] = ['key' => $key, 'label' => $label, 'needle' => $needle];
+                }
+            }
+
+            ksort($positions);
+            $posKeys = array_keys($positions);
+
+            for ($i = 0; $i < count($posKeys); $i++) {
+                $startPos = $posKeys[$i];
+                $meta = $positions[$startPos];
+                $endPos = ($i + 1 < count($posKeys)) ? $posKeys[$i + 1] : strlen($content);
+                $fragment = substr($content, $startPos, $endPos - $startPos);
+
+                TemplateBlock::create([
+                    'print_template_id' => $template->id,
+                    'key' => $meta['key'],
+                    'name' => $meta['label'],
+                    'content' => $fragment,
+                    'type' => 'content',
+                    'position_x' => 0,
+                    'position_y' => 0,
+                    'width' => 0,
+                    'height' => 0,
+                    'is_visible' => true,
+                    'order' => $i,
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('report-templates.index')->with('success', 'تم استيراد قالب A4 وحفظه كقالب افتراضي');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('importA4 error', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'فشل استيراد القالب: ' . $e->getMessage());
+        }
+    }
+
+    public function saveCustomize(Request $request, PrintTemplate $reportTemplate)
+    {
+        $data = $request->validate([
+            'blocks' => 'required|array'
+        ]);
+
+        $blocks = $request->input('blocks', []);
+
+        \Log::info('ReportTemplate::saveCustomize called', ['template_id' => $reportTemplate->id, 'blocks_count' => count($blocks)]);
+        DB::beginTransaction();
+        try {
+            $existingBlockIds = $reportTemplate->templateBlocks()->pluck('id')->toArray();
+            $incomingBlockIds = [];
+
+            foreach ($blocks as $b) {
+                $blockId = $b['id'] ?? null;
+
+                if (is_numeric($blockId)) {
+                    $block = TemplateBlock::where('print_template_id', $reportTemplate->id)->find($blockId);
+                    if (!$block) {
+                        // skip invalid
+                        continue;
+                    }
+                    $block->update([
+                        'name' => $b['name'] ?? $block->name,
+                        'position_x' => $b['position_x'] ?? $block->position_x,
+                        'position_y' => $b['position_y'] ?? $block->position_y,
+                        'width' => $b['width'] ?? $block->width,
+                        'height' => $b['height'] ?? $block->height,
+                    ]);
+                } else {
+                    $block = TemplateBlock::create([
+                        'print_template_id' => $reportTemplate->id,
+                        'key' => $b['key'] ?? ('block_' . Str::random(8)),
+                        'name' => $b['name'] ?? 'Block',
+                        'type' => $b['type'] ?? 'content',
+                        'position_x' => $b['position_x'] ?? 0,
+                        'position_y' => $b['position_y'] ?? 0,
+                        'width' => $b['width'] ?? 200,
+                        'height' => $b['height'] ?? 100,
+                        'is_visible' => true,
+                    ]);
+                }
+
+                $incomingBlockIds[] = $block->id;
+
+                // process elements
+                $incomingElementIds = [];
+                $elements = $b['elements'] ?? [];
+                foreach ($elements as $e) {
+                    $elemId = $e['id'] ?? null;
+                    if (is_numeric($elemId)) {
+                        $element = ReportElement::where('template_block_id', $block->id)->find($elemId);
+                        if (!$element) continue;
+                        $element->update([
+                            'name' => $e['name'] ?? $element->name,
+                            'content' => $e['content'] ?? $element->content,
+                            'position_x' => $e['position_x'] ?? $element->position_x,
+                            'position_y' => $e['position_y'] ?? $element->position_y,
+                            'width' => $e['width'] ?? $element->width,
+                            'height' => $e['height'] ?? $element->height,
+                            'properties' => $e['properties'] ?? $element->properties,
+                            'is_visible' => true,
+                        ]);
+                    } else {
+                        $element = ReportElement::create([
+                            'template_block_id' => $block->id,
+                            'type' => $e['type'] ?? 'text',
+                            'name' => $e['name'] ?? 'Element',
+                            'content' => $e['content'] ?? '',
+                            'position_x' => $e['position_x'] ?? 0,
+                            'position_y' => $e['position_y'] ?? 0,
+                            'width' => $e['width'] ?? 100,
+                            'height' => $e['height'] ?? 30,
+                            'properties' => $e['properties'] ?? [],
+                            'is_visible' => true,
+                        ]);
+                    }
+
+                    $incomingElementIds[] = $element->id;
+                }
+
+                // delete removed elements
+                $existingElementIds = $block->reportElements()->pluck('id')->toArray();
+                $toDeleteElements = array_diff($existingElementIds, $incomingElementIds);
+                if (!empty($toDeleteElements)) {
+                    ReportElement::whereIn('id', $toDeleteElements)->delete();
+                }
+            }
+
+            // delete removed blocks and their elements
+            $toDeleteBlocks = array_diff($existingBlockIds, $incomingBlockIds);
+            if (!empty($toDeleteBlocks)) {
+                ReportElement::whereIn('template_block_id', $toDeleteBlocks)->delete();
+                TemplateBlock::whereIn('id', $toDeleteBlocks)->delete();
+            }
+
+            DB::commit();
+
+            \Log::info('ReportTemplate::saveCustomize saved', ['template_id' => $reportTemplate->id, 'incoming_block_ids' => $incomingBlockIds]);
+
+            return response()->json(['success' => true, 'message' => 'تم حفظ التغييرات بنجاح']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('ReportTemplate::saveCustomize error', ['exception' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function preview(PrintTemplate $reportTemplate)

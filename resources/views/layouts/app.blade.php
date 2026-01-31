@@ -47,7 +47,9 @@
         }
 
         body {
-            background-color: var(--light-color);
+            background-size: 25% !important; 
+            background-attachment: fixed; 
+            background-position: center;
             color: var(--dark-color);
             transition: var(--transition);
             scroll-behavior: smooth;
@@ -136,9 +138,13 @@
             border-radius: 0 !important;
         }
 
+        .card .card-header {
+            background: #A1826233;
+        }
+
         /* Navbar */
         .navbar {
-            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            background: linear-gradient(#5c3811, #61503b);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             border: none;
             padding: 1rem 0;
@@ -401,7 +407,7 @@
     </style>
 </head>
 
-<body class="{{ request()->get('touch_mode', false) ? 'touch-mode' : '' }}">
+<body class="{{ request()->get('touch_mode', false) ? 'touch-mode' : '' }}" style="background: url({{asset('storage/main/bg.jpg')}});">
     <div id="app">
         <!-- Navigation -->
         <nav class="navbar navbar-expand-lg navbar-dark">

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 
 class OrderController extends Controller
 {
@@ -150,96 +151,117 @@ class OrderController extends Controller
 
     public function update(Request $request, Order $order)
     {
+
         if ($order->status === 'completed' || $order->status === 'cancelled') {
             return redirect()->back()->with('error', 'لا يمكن تعديل طلب مكتمل أو ملغي');
         }
 
-        $request->validate([
-            'customer_id' => 'nullable|exists:clients,id',
-            'customer_name' => 'nullable|string|max:255',
-            'customer_phone' => 'nullable|string|max:20',
-            'customer_address' => 'nullable|string|max:500',
-            'room_number' => 'nullable|string|max:50',
-            'type' => 'required|in:dine_in,takeaway,delivery,catering',
-            'items' => 'required|json',
-            'payment_method' => 'required|in:cash,card,bank_transfer,mixed',
-            'payment_reference' => 'nullable|string|max:100',
-            'discount_amount' => 'nullable|numeric|min:0',
-            'subtotal' => 'required|numeric|min:0',
-            'tax_amount' => 'required|numeric|min:0',
-            'total_amount' => 'required|numeric|min:0',
-            'notes' => 'nullable|string'
-        ]);
-
         try {
             DB::beginTransaction();
+            // If caller provided `items` (full order items payload), handle full items replacement
+            if ($request->has('items')) {
+                $items = json_decode($request->items, true);
 
-            // Parse items from JSON
-            $items = json_decode($request->items, true);
-
-            if (!is_array($items) || count($items) === 0) {
-                throw new Exception('يجب إضافة منتج واحد على الأقل للطلب');
-            }
-
-            // Restore stock for old items
-            foreach ($order->orderItems as $item) {
-                if ($item->product && $item->product->track_inventory) {
-                    $item->product->stock_quantity += $item->quantity;
-                    $item->product->save();
-                }
-            }
-
-            // Delete old items
-            $order->orderItems()->delete();
-
-            // Add new items and update stock
-            foreach ($items as $item) {
-                $product = Product::findOrFail($item['product_id']);
-
-                // Check stock
-                if ($product->track_inventory && $product->stock_quantity < $item['quantity']) {
-                    throw new Exception("المنتج '{$product->name_ar}' غير متوفر بالكمية المطلوبة");
+                if (!is_array($items) || count($items) === 0) {
+                    throw new Exception('يجب إضافة منتج واحد على الأقل للطلب');
                 }
 
-                // Create order item
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'total_price' => $item['price'] * $item['quantity'],
+                // Restore stock for old items
+                foreach ($order->orderItems as $item) {
+                    if ($item->product && $item->product->track_inventory) {
+                        $item->product->stock_quantity += $item->quantity;
+                        $item->product->save();
+                    }
+                }
+
+                // Delete old items
+                $order->orderItems()->delete();
+
+                // Add new items and update stock
+                foreach ($items as $item) {
+                    $product = Product::findOrFail($item['product_id']);
+
+                    // Check stock
+                    if ($product->track_inventory && $product->stock_quantity < $item['quantity']) {
+                        throw new Exception("المنتج '{$product->name_ar}' غير متوفر بالكمية المطلوبة");
+                    }
+
+                    // Create order item
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'total_price' => $item['price'] * $item['quantity'],
+                    ]);
+
+                    // Update stock
+                    if ($product->track_inventory) {
+                        $product->stock_quantity -= $item['quantity'];
+                        $product->save();
+                    }
+                }
+
+                // Update Order core totals and meta if provided
+                $order->update([
+                    'subtotal' => $request->subtotal ?? $order->subtotal,
+                    'tax_amount' => $request->tax_amount ?? $order->tax_amount,
+                    'discount_amount' => $request->discount_amount ?? $order->discount_amount,
+                    'total_amount' => $request->total_amount ?? $order->total_amount,
+                    'remaining_amount' => ($request->total_amount ?? $order->total_amount) - ($order->paid_amount ?? 0),
                 ]);
+            } else {
+                // Partial update (client/payment) — update only provided fields
+                $updatable = [
+                    'customer_id' => $request->input('client_id') ?? $request->input('customer_id'),
+                    'customer_name' => $request->input('client_name') ?? $request->input('customer_name'),
+                    'customer_phone' => $request->input('phone') ?? $request->input('customer_phone'),
+                    'customer_address' => $request->input('address') ?? $request->input('customer_address'),
+                    'room_number' => $request->input('table_id') ?? $request->input('room_number'),
+                    'type' => $request->input('order_type') ?? $request->input('type'),
+                    'payment_method' => $request->input('payment_method'),
+                    'payment_reference' => $request->input('payment_reference'),
+                    'paid_amount' => $request->input('paid_amount') ?? $order->paid_amount,
+                    'subtotal' => $request->input('subtotal') ?? $order->subtotal,
+                    'tax_amount' => $request->input('tax_amount') ?? $order->tax_amount,
+                    'discount_amount' => $request->input('discount_amount') ?? $order->discount_amount,
+                    'total_amount' => $request->input('total_amount') ?? $order->total_amount,
+                    'remaining_amount' => $request->input('total_amount') ? ($request->input('total_amount') - ($order->paid_amount ?? 0)) : $order->remaining_amount,
+                    'notes' => $request->input('notes'),
+                ];
 
-                // Update stock
-                if ($product->track_inventory) {
-                    $product->stock_quantity -= $item['quantity'];
-                    $product->save();
+                // Remove null keys so we only update given fields
+                $updateData = array_filter($updatable, function ($v) {
+                    return !is_null($v);
+                });
+
+                if (count($updateData) > 0) {
+                    $order->update($updateData);
                 }
             }
-
-            // Update Order
-            $order->update([
-                'customer_id' => $request->customer_id,
-                'customer_name' => $request->customer_name,
-                'customer_phone' => $request->customer_phone,
-                'customer_address' => $request->customer_address,
-                'room_number' => $request->room_number,
-                'type' => $request->type,
-                'payment_method' => $request->payment_method,
-                'payment_reference' => $request->payment_reference,
-                'subtotal' => $request->subtotal,
-                'tax_amount' => $request->tax_amount,
-                'discount_amount' => $request->discount_amount ?? 0,
-                'total_amount' => $request->total_amount,
-                'remaining_amount' => $request->total_amount - ($order->paid_amount ?? 0),
-                'notes' => $request->notes,
-            ]);
 
             DB::commit();
+
+            // If the request expects JSON (AJAX), return structured JSON instead of redirecting
+            if ($request->expectsJson() || $request->ajax()) {
+                $order->refresh();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تم تحديث الطلب بنجاح',
+                    'order' => $order,
+                ]);
+            }
 
             return redirect()->route('orders.index')->with('success', 'تم تحديث الطلب بنجاح');
         } catch (Exception $e) {
             DB::rollBack();
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ: ' . $e->getMessage(),
+                ], 400);
+            }
+
             return redirect()->back()->with('error', 'حدث خطأ: ' . $e->getMessage())->withInput();
         }
     }
@@ -298,7 +320,35 @@ class OrderController extends Controller
     public function print(Order $order)
     {
         $order->load(['user', 'orderItems.product']);
-        return view('orders.print', compact('order'));
+
+        // Try to load default template for order/invoice
+        $template = \App\Models\PrintTemplate::where('type', 'order')
+            ->orWhere('type', 'invoice')
+            ->where('is_default', true)
+            ->first();
+
+        if ($template) {
+            $data = [
+                'order_number' => $order->order_number,
+                'customer_name' => $order->customer_name ?? ($order->customer?->name ?? ''),
+                'customer_phone' => $order->customer_phone,
+                'date' => $order->created_at->format('Y-m-d'),
+                'time' => $order->created_at->format('H:i'),
+                'items' => $order->orderItems->map(function ($it) {
+                    return ['name' => $it->product->name ?? '', 'quantity' => $it->quantity, 'price' => $it->price, 'total' => $it->total_price];
+                })->toArray(),
+                'subtotal' => $order->subtotal,
+                'tax' => $order->tax_amount,
+                'total' => $order->total_amount,
+                'cashier' => $order->user?->name,
+            ];
+
+            $content = $template->generateContent($data);
+            return view('orders.print', compact('order', 'content'));
+        }
+
+        // Fallback: use a4 static blade
+        return view('print_templates.a4template', compact('order'));
     }
 
     public function kitchenOrders()

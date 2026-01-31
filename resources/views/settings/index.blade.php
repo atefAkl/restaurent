@@ -28,7 +28,7 @@
     <div class="card mb-3">
         <div class="card-body d-flex justify-content-between align-items-center">
             <div class="title">
-                <h5 class="card-title mb-4">الإعدادات</h5>
+                <h5 class="card-title fw-bold">الإعدادات</h5>
                 <p>هنا يمكنك إدارة إعدادات النظام</p>
             </div>
             <div class="quick-actions">
@@ -42,7 +42,7 @@
     <!-- Device Management Section -->
     <div class="card settings-group-card mb-3">
         <div class="card-header">
-            <h6 class="text-muted mb-3">إدارة الأجهزة</h6>
+            <h6 class="fw-bold">إدارة الأجهزة</h6>
         </div>
         <div class="card-body">
             <div class="row">
@@ -71,40 +71,38 @@
     <!-- Reports & Templates Section -->
     <div class="card settings-group-card mb-3">
         <div class="card-header">
-            <h6 class="text-muted mb-3">التقارير والقوالب</h6>
+            <h6 class="fw-bold">التقارير والقوالب</h6>
         </div>
         <div class="card-body">
-            <div class="col-md-4 mb-3">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <i class="bi bi-file-earmark-text text-primary me-2"></i>
-                            التقارير والقوالب
-                        </h6>
-                        <div class="d-grid gap-2">
-                            <a href="{{ route('report-components.index') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-puzzle me-2"></i>مكونات التقارير
-                            </a>
-                            <a href="{{ route('report-templates.index') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-file-earmark me-2"></i>قوالب التقارير
-                            </a>
-                            <a href="{{ route('report-themes.index') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-palette me-2"></i>ثيمات التقارير
-                            </a>
-                            <a href="{{ route('printer-settings.index') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-printer me-2"></i>إعدادات الطباعة
-                            </a>
-                        </div>
-                    </div>
+            <div class="row">        
+                <div class="col-md-4 mb-3">
+                    <a href="{{ route('report-components.index') }}" class="text-decoration-none d-flex align-items-center p-2 rounded settings-link">
+                        <i class="bi bi-puzzle me-2"></i> <span>مكونات التقارير</span>
+                    </a>
                 </div>
-            </div>
+                <div class="col-md-4 mb-3">
+                    <a href="{{ route('report-templates.index') }}" class="text-decoration-none d-flex align-items-center p-2 rounded settings-link">
+                        <i class="bi bi-file-earmark me-2"></i> <span>قوالب التقارير</span>
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="{{ route('report-themes.index') }}" class="text-decoration-none d-flex align-items-center p-2 rounded settings-link">
+                        <i class="bi bi-palette me-2"></i> <span>ثيمات التقارير</span>
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="{{ route('printer-settings.index') }}" class="text-decoration-none d-flex align-items-center p-2 rounded settings-link">
+                        <i class="bi bi-printer me-2"></i> <span>إعدادات الطباعة</span>
+                    </a>
+                </div>
+            </div>                   
         </div>
     </div>
 
     <!-- User Management Section -->
     <div class="card settings-group-card mb-3">
         <div class="card-header">
-            <h6 class="text-muted py-3">إدارة المستخدمين</h6>
+            <h6 class="fw-bold">إدارة المستخدمين</h6>
         </div>
         <div class="card-body">
             <div class="row">
@@ -133,7 +131,7 @@
     <!-- Operations Section -->
     <div class="card settings-group-card mb-3">
         <div class="card-header">
-            <h6 class="text-muted mb-3">العمليات</h6>
+            <h6 class="fw-bold">العمليات</h6>
         </div>
         <div class="card-body">
             <div class="row">
