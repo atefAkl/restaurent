@@ -51,7 +51,9 @@ class OrderController extends Controller
             ]);
         }
         $orderItems = $order->orderItems;
+
         $clients = Client::where('status', true)->get();
+        $orderClient = $order->customer_id ? Client::find($order->customer_id) : null;
         return view('orders.create', compact('categories', 'products', 'order', 'active_category', 'orderItems', 'clients'));
     }
 
